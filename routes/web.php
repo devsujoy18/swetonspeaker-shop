@@ -11,6 +11,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SiteSettingController;
 use App\Http\Controllers\OldOrderController;
+use App\Http\Controllers\AdminNotificationController;
 
 Route::get('/', function () {
     return view('home');
@@ -133,6 +134,12 @@ Route::middleware('auth')->group(function () {
 
         //Modify existing order
         Route::get('/modify-order/{order}', [OrderController::class, 'modifyOrder'])->name('admin.orders.modify');
+
+        // Notification routes
+        Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications.index');
+        Route::post('/notifications/{notification}/mark-as-read', [AdminNotificationController::class, 'markAsRead'])->name('admin.notifications.mark-as-read');
+        Route::post('/notifications/mark-all-read', [AdminNotificationController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-read');
+        Route::delete('/notifications/{notification}', [AdminNotificationController::class, 'destroy'])->name('admin.notifications.destroy');
 
     });
     

@@ -89,6 +89,10 @@
                             {{ __('Tag Master') }}
                         </x-nav-link>
 
+                        <x-nav-link :href="route('admin.reviews.index')" :active="request()->routeIs('admin.reviews.index')">
+                            {{ __('All Reviews') }}
+                        </x-nav-link>
+
                         <x-dropdown align="left" width="48">
                             <x-slot name="trigger">
                                 <button class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none transition">
@@ -138,6 +142,21 @@
 
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
+                @canany(['isAdmin', 'isSubadmin'])
+                @php
+                    $unreadCount = \App\Models\Notification::unread()->count();
+                @endphp
+                <a href="{{ route('admin.notifications.index') }}" class="relative inline-flex items-center px-3 py-2 mr-3 text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none transition">
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    @if ($unreadCount > 0)
+                        <span class="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+                            {{ $unreadCount > 99 ? '99+' : $unreadCount }}
+                        </span>
+                    @endif
+                </a>
+                @endcanany
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -246,6 +265,21 @@
 
             <x-responsive-nav-link :href="route('admin.tagmaster')" :active="request()->routeIs('admin.tagmaster')">
                 {{ __('Tag Master') }}
+            </x-responsive-nav-link>
+             <x-responsive-nav-link :href="route('admin.reviews.index')" :active="request()->routeIs('admin.reviews.index')">
+                {{ __('All Reviews') }}
+            </x-responsive-nav-link>
+            
+            @php
+                $unreadCountMobile = \App\Models\Notification::unread()->count();
+            @endphp
+            <x-responsive-nav-link :href="route('admin.notifications.index')" :active="request()->routeIs('admin.notifications.*')" class="flex items-center justify-between">
+                <span>{{ __('Notifications') }}</span>
+                @if ($unreadCountMobile > 0)
+                    <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                        {{ $unreadCountMobile > 99 ? '99+' : $unreadCountMobile }}
+                    </span>
+                @endif
             </x-responsive-nav-link>
             @endcan
             

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ProfileUpdated;
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,22 +27,41 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $validated = $request->validated();
+        $changedFields = [];
+
+        foreach ($validated as $key => $value) {
+            if ($user->{$key} !== $value) {
+                $changedFields[] = $key;
+            }
         }
 
-        $request->user()->save();
+        $user->fill($validated);
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+            if (! in_array('email_verified_at', $changedFields)) {
+                $changedFields[] = 'email_verified_at';
+            }
+        }
+
+        $user->save();
+
+        if (! empty($changedFields) && $user->user_type === 'user') {
+            event(new ProfileUpdated($user, $changedFields, 'profile'));
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
-    
+
     /**
      * Update address
      */
-    public function update_address(Request $request){
-        
+    public function update_address(Request $request)
+    {
+
         $validated = $request->validate([
             'phone_number' => ['required', 'string', 'max:20'],
             'zip_postal_code' => ['nullable', 'string', 'max:20'],
@@ -50,15 +70,29 @@ class ProfileController extends Controller
             'landmark' => ['nullable', 'string', 'max:255'],
             'city_district_town' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:100'],
-            'company_name'        => ['nullable', 'string', 'max:255'],
-            'gst_no'              => ['nullable', 'regex:/^[A-Z0-9]{15}$/'],
-        ],[
-            'gst_no.regex'        => 'Please enter a valid GST number (15 characters, A–Z and 0–9 only).',
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'gst_no' => ['nullable', 'regex:/^[A-Z0-9]{15}$/'],
+        ], [
+            'gst_no.regex' => 'Please enter a valid GST number (15 characters, A–Z and 0–9 only).',
         ]);
 
         $user = $request->user();
 
-        $user->update($validated);
+        $changedFields = [];
+
+        foreach ($validated as $key => $value) {
+            if ($user->{$key} !== $value) {
+                $changedFields[] = $key;
+            }
+        }
+
+        if (! empty($changedFields)) {
+            $user->update($validated);
+
+            if ($user->user_type === 'user') {
+                event(new ProfileUpdated($user, $changedFields, 'address'));
+            }
+        }
 
         return Redirect::route('profile.edit')->with('status', 'address-updated');
     }
