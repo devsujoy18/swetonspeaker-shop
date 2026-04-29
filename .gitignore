@@ -6,6 +6,10 @@
 /storage/*.key
 /vendor
 /storage
+/.agents
+AGENTS.md
+boost.json
+opencode.json
 .env
 .env.backup
 .env.production
