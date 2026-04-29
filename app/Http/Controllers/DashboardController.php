@@ -24,7 +24,7 @@ class DashboardController extends Controller
             $dates = collect(range(6, 0))->map(fn ($i) => Carbon::today()->subDays($i)->format('Y-m-d'));
             
             $ordersData = $dates->map(fn ($date) =>
-                Order::whereDate('order_date', $date)->count()
+                Order::whereDate('order_date', $date)->where('payment_status', 'success')->count()
             );
 
             $revenueData = $dates->map(fn ($date) =>
