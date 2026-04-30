@@ -82,15 +82,15 @@
                         </x-nav-link>
                         
                         <x-nav-link :href="route('admin.pincodemaster')" :active="request()->routeIs('admin.pincodemaster')">
-                            {{ __('Pincode Master') }}
+                            {{ __('Pincodes') }}
                         </x-nav-link>
                         
-                        <x-nav-link :href="route('admin.tagmaster')" :active="request()->routeIs('admin.tagmaster')">
+                        {{-- <x-nav-link :href="route('admin.tagmaster')" :active="request()->routeIs('admin.tagmaster')">
                             {{ __('Tag Master') }}
-                        </x-nav-link>
+                        </x-nav-link> --}}
 
                         <x-nav-link :href="route('admin.reviews.index')" :active="request()->routeIs('admin.reviews.index')">
-                            {{ __('All Reviews') }}
+                            {{ __('Reviews') }}
                         </x-nav-link>
 
                         <x-dropdown align="left" width="48">
@@ -260,14 +260,14 @@
             </x-responsive-nav-link>
             
             <x-responsive-nav-link :href="route('admin.pincodemaster')" :active="request()->routeIs('admin.pincodemaster')">
-                {{ __('Pincode Master') }}
+                {{ __('Pincodes') }}
             </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('admin.tagmaster')" :active="request()->routeIs('admin.tagmaster')">
+            {{-- <x-responsive-nav-link :href="route('admin.tagmaster')" :active="request()->routeIs('admin.tagmaster')">
                 {{ __('Tag Master') }}
-            </x-responsive-nav-link>
+            </x-responsive-nav-link> --}}
              <x-responsive-nav-link :href="route('admin.reviews.index')" :active="request()->routeIs('admin.reviews.index')">
-                {{ __('All Reviews') }}
+                {{ __('Reviews') }}
             </x-responsive-nav-link>
             
             @php
