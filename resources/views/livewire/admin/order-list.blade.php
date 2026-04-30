@@ -34,6 +34,8 @@
             <option value="">All Orders</option>
             <option value="1">Modified Only</option>
         </select>
+
+        <input type="text" wire:model.live="userSearch" placeholder="NAME/EMAIL/PHONE" class="border-gray-300 rounded-md">
         
         <button wire:click="resetFilters" type="button" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
             Reset

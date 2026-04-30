@@ -30,6 +30,7 @@ class OrderList extends Component
     public $selectedOrderId = null;
     public $deliveryPartner ='';
     public $isModified = '';
+    public $userSearch = '';
 
     public function resetFilters()
     {
@@ -39,6 +40,7 @@ class OrderList extends Component
         $this->dateFrom = '';
         $this->dateTo = '';
         $this->isModified = '';
+        $this->userSearch = '';
         $this->resetPage();
     }
 
@@ -371,6 +373,15 @@ class OrderList extends Component
                 Carbon::parse($this->dateTo)->endOfDay(),
             ]);
         }
+
+        if ($this->userSearch) {
+            $orderQuery->whereHas('user', function ($q) {
+                  $q->where('name', 'LIKE', '%' . $this->userSearch . '%')
+                    ->orWhere('email', 'LIKE', '%' . $this->userSearch . '%')
+                    ->orWhere('phone_number', 'LIKE', '%' . $this->userSearch . '%');
+              });
+        }
+
         $orders = $orderQuery->latest()->paginate($this->perPage);  
 
         return view('livewire.admin.order-list',[
