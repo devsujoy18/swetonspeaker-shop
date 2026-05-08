@@ -1,17 +1,16 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AdminNotificationController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\OldOrderController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SiteSettingController;
-use App\Http\Controllers\OldOrderController;
-use App\Http\Controllers\AdminNotificationController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('home');
@@ -25,25 +24,25 @@ Route::get('/', function () {
 Route::get('{type}', function ($type) {
     return view('type_category', ['type' => $type]);
 })
-->where('type', 'pro-loudspeaker|home-loudspeaker')
-->name('type.category');
+    ->where('type', 'pro-loudspeaker|home-loudspeaker')
+    ->name('type.category');
 
 // 2️. Category page
 Route::get('{type}/{categorySlug}', function ($type, $categorySlug = null) {
     return view('category_products', [
-        'type' => $type, 
-        'categorySlug' => $categorySlug
+        'type' => $type,
+        'categorySlug' => $categorySlug,
     ]);
 })
-->where('type', 'pro-loudspeaker|home-loudspeaker')
-->name('category.products');
+    ->where('type', 'pro-loudspeaker|home-loudspeaker')
+    ->name('category.products');
 
 // 3️. Product page
 Route::get('{type}/{categorySlug}/{productSlug}', function ($type, $categorySlug, $productSlug) {
     return view('product_details', ['type' => $type, 'categorySlug' => $categorySlug, 'productSlug' => $productSlug]);
 })
-->where('type', 'pro-loudspeaker|home-loudspeaker')
-->name('product.details');
+    ->where('type', 'pro-loudspeaker|home-loudspeaker')
+    ->name('product.details');
 
 Route::get('/cart', function () {
     return view('cart');
@@ -51,12 +50,11 @@ Route::get('/cart', function () {
 
 Route::get('/checkout', [CheckoutController::class, 'index'])
     ->name('checkout')
-    ->middleware(['auth','cart.enabled']);
+    ->middleware(['auth', 'cart.enabled']);
 
 // Guest checkout page
 Route::get('/guest-checkout', [CheckoutController::class, 'guestCheckout'])
     ->name('guest.checkout')->middleware('cart.enabled');
-
 
 Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.place');
 Route::get('/payment/{token}', [CheckoutController::class, 'razorpayPaymentPage'])->name('razorpay.payment.page');
@@ -68,7 +66,6 @@ Route::get('/order/failed', [CheckoutController::class, 'failed'])->name('checko
  * Razorpay webhook
  **/
 Route::post('/razorpay/webhook', [CheckoutController::class, 'handlePayment'])->name('razorpay.webhook');
-
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -83,25 +80,21 @@ Route::middleware('auth')->group(function () {
      */
     Route::get('/my-orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/my-orders/{order_number}', [OrderController::class, 'show'])->name('orders.show');
-    
+
     // Review routes
-    
 
-    
-    
-    Route::get('old-orders',[OldOrderController::class, 'index'])->name('old.orders');
-
+    Route::get('old-orders', [OldOrderController::class, 'index'])->name('old.orders');
 
     Route::prefix('admin')->group(function () {
-        //Route::get('/categories', [CategoryController::class, 'manage'])->name('categories.manage');
-        Route::get('/categories', function(){
+        // Route::get('/categories', [CategoryController::class, 'manage'])->name('categories.manage');
+        Route::get('/categories', function () {
             return view('categories.manage');
         })->name('categories.manage');
-        
-        Route::get('/products', function(){
+
+        Route::get('/products', function () {
             return view('products.manage');
         })->name('products.manage');
-        
+
         Route::get('orders', [OrderController::class, 'allOrders'])->name('admin.orders.index');
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
         Route::get('/orders/{order}', [OrderController::class, 'showDetails'])->name('admin.orders.show');
@@ -116,23 +109,25 @@ Route::middleware('auth')->group(function () {
         Route::get('reports/export', [ReportController::class, 'export'])->name('admin.reports.export');
         Route::get('settings', [SiteSettingController::class, 'edit'])->name('admin.settings.edit');
         Route::post('settings', [SiteSettingController::class, 'update'])->name('admin.settings.update');
-        
-        Route::get('/pincode-master', function(){
+        Route::get('reports/sucess-order', [ReportController::class, 'success_order'])->name('admin.orders.report.success');
+        Route::get('reports/sucess-order/export', [ReportController::class, 'success_order_export'])->name('admin.orders.report.success.export');
+
+        Route::get('/pincode-master', function () {
             return view('settings.pincode_master');
         })->name('admin.pincodemaster');
-        
-        Route::get('/tag-master', function(){
+
+        Route::get('/tag-master', function () {
             return view('settings.tag_master');
         })->name('admin.tagmaster');
-        
+
         // Review management
-        Route::get('/reviews', function(){
+        Route::get('/reviews', function () {
             return view('orders.all_reviews');
         })->name('admin.reviews.index');
 
         Route::get('/reviews/{reviewId}', [OrderController::class, 'review_details'])->name('admin.reviews.show');
 
-        //Modify existing order
+        // Modify existing order
         Route::get('/modify-order/{order}', [OrderController::class, 'modifyOrder'])->name('admin.orders.modify');
 
         // Notification routes
@@ -142,9 +137,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('/notifications/{notification}', [AdminNotificationController::class, 'destroy'])->name('admin.notifications.destroy');
 
     });
-    
+
     // Review routes
-    //Route::get('/reviews/create/{order_number}', \App\Livewire\Reviews\ReviewComponent::class)->name('reviews.create');
+    // Route::get('/reviews/create/{order_number}', \App\Livewire\Reviews\ReviewComponent::class)->name('reviews.create');
     Route::get('reviews/create/{order_number}', [OrderController::class, 'product_review'])->name('reviews.create');
 });
 

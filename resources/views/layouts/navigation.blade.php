@@ -67,9 +67,9 @@
                                 <x-dropdown-link :href="route('admin.orders.index')" :active="request()->routeIs('admin.orders.index')">
                                     {{ __('All Orders') }}
                                 </x-dropdown-link>
-                                {{--<x-dropdown-link :href="route('admin.orders.processed')" :active="request()->routeIs('admin.orders.processed')">
-                                    {{ __('Processed Orders') }}
-                                </x-dropdown-link>--}}
+                                <x-dropdown-link :href="route('admin.orders.report.success')" :active="request()->routeIs('admin.orders.report.success')">
+                                    {{ __('Order success report') }}
+                                </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
                         
@@ -127,6 +127,9 @@
                             <x-slot name="content">
                                 <x-dropdown-link :href="route('admin.orders.index')" :active="request()->routeIs('admin.orders.index')">
                                     {{ __('All Orders') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.orders.report.success')" :active="request()->routeIs('admin.orders.report.success')">
+                                    {{ __('Order success report') }}
                                 </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
@@ -237,9 +240,9 @@
             <x-responsive-nav-link :href="route('admin.orders.index')" :active="request()->routeIs('admin.orders.index')" class="pl-8">
                 {{ __('All Orders') }}
             </x-responsive-nav-link>
-            {{--<x-responsive-nav-link :href="route('products.manage')" :active="request()->routeIs('products.*')" class="pl-8">
-                {{ __('Products') }}
-            </x-responsive-nav-link>--}}
+            <x-responsive-nav-link :href="route('admin.orders.report.success')" :active="request()->routeIs('admin.orders.report.success')" class="pl-8">
+                {{ __('Order success report') }}
+            </x-responsive-nav-link>
             
             <x-responsive-nav-link :href="route('admin.reports')" :active="request()->routeIs('admin.reports')">
                 {{ __('Report') }}
@@ -291,6 +294,9 @@
             </div>
             <x-responsive-nav-link :href="route('admin.orders.index')" :active="request()->routeIs('admin.orders.index')" class="pl-8">
                 {{ __('All Orders') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('admin.orders.report.success')" :active="request()->routeIs('admin.orders.report.success')" class="pl-8">
+                {{ __('Order success report') }}
             </x-responsive-nav-link>
             
             <x-responsive-nav-link :href="route('admin.reports')" :active="request()->routeIs('admin.reports')">
