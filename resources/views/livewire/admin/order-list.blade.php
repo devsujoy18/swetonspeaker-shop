@@ -330,6 +330,31 @@
                             <td colspan="8" class="p-3">
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div class="col-span-2">
+                                        @can('isAdmin')
+                                            <div class="mb-3 bg-white border shadow-sm rounded-lg p-4">
+                                                <div class="text-sm text-gray-700">
+                                                    <strong>Order SL No:</strong> {{ $order->order_sl_no ?? 'Not Set' }}
+                                                </div>
+
+                                                @if($order->payment_status === 'success')
+                                                    <button
+                                                        wire:click="openOrderSlNoModal({{ $order->id }})"
+                                                        class="mt-2 text-indigo-600 hover:underline text-sm"
+                                                    >
+                                                        ✏️ {{ $order->order_sl_no ? 'Update' : 'Add' }} Order SL No
+                                                    </button>
+                                                @else
+                                                    <button
+                                                        class="mt-2 px-3 py-1 bg-gray-100 text-gray-400 rounded-md cursor-not-allowed border border-gray-200 text-xs"
+                                                        disabled
+                                                        title="Available only when payment status is success"
+                                                    >
+                                                        🚫 Order SL No Locked
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        @endcan
+
                                         @if($order->payment_status === 'success' && ($order->order_status === 'confirmed' || $order->order_status === 'dispatched' || $order->order_status === 'complete'))
 
                                             {{-- If AWB already exists → show summary --}}
@@ -483,6 +508,43 @@
                 >
                     <span wire:loading.remove wire:target="saveAwb">Save AWB</span>
                     <span wire:loading wire:target="saveAwb">Saving...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($orderSlNoModalOpen)
+    <div class="fixed inset-0 bg-black/50 z-50 flex justify-center items-center">
+        <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
+            <h2 class="text-lg font-semibold mb-1">Update Order SL No</h2>
+            <p class="text-xs text-gray-500 mb-4">Only successful payments are allowed for this update.</p>
+
+            <label class="font-medium text-sm">Order SL No *</label>
+            <input type="number"
+                min="1"
+                wire:model="orderSlNo"
+                class="w-full mt-1 mb-2 border-gray-300 rounded-md"
+                placeholder="Enter serial number">
+
+            @error('orderSlNo')
+                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+            @enderror
+
+            <div class="flex justify-end gap-3 mt-4">
+                <button wire:click="$set('orderSlNoModalOpen', false)"
+                        class="px-4 py-2 bg-gray-200 rounded-md">
+                    Cancel
+                </button>
+
+                <button
+                    wire:click="saveOrderSlNo"
+                    wire:loading.attr="disabled"
+                    wire:target="saveOrderSlNo"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                >
+                    <span wire:loading.remove wire:target="saveOrderSlNo">Save SL No</span>
+                    <span wire:loading wire:target="saveOrderSlNo">Saving...</span>
                 </button>
             </div>
         </div>

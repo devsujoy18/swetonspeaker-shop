@@ -2,34 +2,54 @@
 
 namespace App\Livewire\Admin;
 
-use Livewire\Component;
-use Livewire\WithPagination;
+use App\Mail\OrderDispatchedMail;
+use App\Mail\OrderModifiedMail;
+use App\Mail\OrderPlacedMail;
+use App\Mail\OrderReviewMail;
+use App\Mail\OrderStatusUpdatedMail;
 use App\Models\Order;
+use App\Services\WatiService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\OrderPlacedMail;
-use App\Mail\OrderStatusUpdatedMail;
-use App\Services\WatiService;
-use App\Mail\OrderDispatchedMail;
-use App\Mail\OrderReviewMail;
-use App\Mail\OrderModifiedMail;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class OrderList extends Component
 {
     use WithPagination;
+
     public $search = '';
+
     public $orderStatus = '';
+
     public $paymentStatus = '';
+
     public $dateFrom = '';
+
     public $dateTo = '';
+
     public $perPage = 10;
+
     public $expandedOrderId = null;
+
     public $awbModalOpen = false;
+
     public $awbPartner = null;
+
     public $awbRefNo = null;
+
     public $selectedOrderId = null;
-    public $deliveryPartner ='';
+
+    public $orderSlNoModalOpen = false;
+
+    public $selectedOrderSlNoId = null;
+
+    public $orderSlNo = null;
+
+    public $deliveryPartner = '';
+
     public $isModified = '';
+
     public $userSearch = '';
 
     public function resetFilters()
@@ -61,14 +81,14 @@ class OrderList extends Component
         ], [
             'awbPartner.required' => 'Please select a shipping partner.',
         ]);
-        
+
         $order = Order::find($this->selectedOrderId);
 
         $order->awb_partner = $this->awbPartner;
         $order->awb_number = $this->awbRefNo ?? null;
         $order->save();
-        
-        if(!empty($order->awb_number)){
+
+        if (! empty($order->awb_number)) {
             try {
                 Mail::to($order->billing_email)
                     ->send(new OrderDispatchedMail($order));
@@ -83,7 +103,7 @@ class OrderList extends Component
             try {
                 $watiService = new WatiService;
 
-                if($order->awb_partner == 'Delhivery'){
+                if ($order->awb_partner == 'Delhivery') {
                     $watiService->sendTemplateMessage(
                         mobile: $order->billing_phone,
                         templateName: 'send_awb_delhivery',
@@ -93,7 +113,7 @@ class OrderList extends Component
                         ],
                         broadcastName: 'send_awb_no'
                     );
-                }else if($order->awb_partner == 'Bluedart'){
+                } elseif ($order->awb_partner == 'Bluedart') {
                     $watiService->sendTemplateMessage(
                         mobile: $order->billing_phone,
                         templateName: 'send_waybill_bluedart',
@@ -104,8 +124,7 @@ class OrderList extends Component
                         broadcastName: 'send_waybill_no'
                     );
                 }
-            
-                
+
             } catch (\Throwable $e) {
                 \Log::error('WhatsApp notification failed', [
                     'order_id' => $order->id,
@@ -114,13 +133,88 @@ class OrderList extends Component
             }
         }
 
-        //$this->dispatch('notify', message: 'AWB updated successfully!');
+        // $this->dispatch('notify', message: 'AWB updated successfully!');
         $this->dispatch('notify', [
             'message' => 'AWB updated successfully!',
         ]);
         $this->awbModalOpen = false;
     }
 
+    public function openOrderSlNoModal($orderId)
+    {
+        $order = Order::find($orderId);
+
+        if (! $order) {
+            $this->dispatch('notify', [
+                'message' => 'Order not found.',
+            ]);
+
+            return;
+        }
+
+        if ($order->payment_status !== 'success') {
+            $this->dispatch('notify', [
+                'message' => 'Order SL No can be updated only for successful payments.',
+            ]);
+
+            return;
+        }
+
+        $this->selectedOrderSlNoId = $order->id;
+        $this->orderSlNo = $order->order_sl_no;
+        $this->resetErrorBag('orderSlNo');
+        $this->orderSlNoModalOpen = true;
+    }
+
+    public function saveOrderSlNo()
+    {
+        $this->validate([
+            'orderSlNo' => 'required|integer|min:1',
+        ]);
+
+        $order = Order::find($this->selectedOrderSlNoId);
+
+        if (! $order) {
+            $this->dispatch('notify', [
+                'message' => 'Order not found.',
+            ]);
+            $this->orderSlNoModalOpen = false;
+
+            return;
+        }
+
+        if ($order->payment_status !== 'success') {
+            $this->dispatch('notify', [
+                'message' => 'Order SL No can be updated only for successful payments.',
+            ]);
+
+            return;
+        }
+
+        $date = Carbon::parse($order->created_at)->toDateString();
+
+        $serialAlreadyUsed = Order::whereDate('created_at', $date)
+            ->where('payment_status', 'success')
+            ->where('id', '!=', $order->id)
+            ->where('order_sl_no', $this->orderSlNo)
+            ->exists();
+
+        if ($serialAlreadyUsed) {
+            $this->addError('orderSlNo', 'This SL No is already used for a successful order on the same date.');
+
+            return;
+        }
+
+        $order->update([
+            'order_sl_no' => (int) $this->orderSlNo,
+        ]);
+
+        $this->dispatch('notify', [
+            'message' => 'Order SL No updated successfully!',
+        ]);
+
+        $this->orderSlNoModalOpen = false;
+    }
 
     public function toggleExpand($orderId)
     {
@@ -136,32 +230,32 @@ class OrderList extends Component
         /**
          * If payment status is success then order status should be confirmed
          */
-        if($status == 'success' && $order->order_status == 'processing'){
+        if ($status == 'success' && $order->order_status == 'processing') {
             $order->order_status = 'confirmed';
             $order->save();
-        
-            $this->generateOrderslno($order); //Call to update order serial no
+
+            $this->generateOrderslno($order); // Call to update order serial no
         }
 
         /**
          * If payment status is sucess then send order placed email to user & admin
          */
-        if($status == 'success'){
+        if ($status == 'success') {
             try {
                 Mail::to($order->billing_email)->send(new OrderPlacedMail($order, false, 'Your order has been placed.'));
-                
+
                 $emails = explode(',', env('ADMIN_EMAILS'));
-                //Mail::to('satnam1122@gmail.com')->send(new OrderPlacedMail($order, true));
+                // Mail::to('satnam1122@gmail.com')->send(new OrderPlacedMail($order, true));
                 Mail::to($emails)->send(new OrderPlacedMail($order, true));
             } catch (\Throwable $e) {
                 // Log error or handle it as needed
                 dd($e->getMessage());
             }
-            
+
             // Send WhatsApp notification
             try {
                 $watiService = new WatiService;
-            
+
                 $watiService->sendTemplateMessage(
                     mobile: $order->billing_phone,
                     templateName: 'order_success_new',
@@ -183,7 +277,7 @@ class OrderList extends Component
             'message' => 'Payment status updated successfully!',
         ]);
     }
-    
+
     public function generateOrderslno($order)
     {
         $date = Carbon::parse($order->created_at)->toDateString();
@@ -197,7 +291,7 @@ class OrderList extends Component
 
         // Update serial number
         $order->update([
-            'order_sl_no' => $nextSerial
+            'order_sl_no' => $nextSerial,
         ]);
 
         return $nextSerial;
@@ -230,18 +324,21 @@ class OrderList extends Component
 
     public function updateOrderStatus($orderId, $status)
     {
-        //dd($status);
+        // dd($status);
         $order = Order::find($orderId);
 
-        if (!$order) return;
+        if (! $order) {
+            return;
+        }
 
         // Prevent invalid changes (security)
         $allowed = $this->getAvailableStatuses($order->order_status);
 
-        if (!in_array($status, $allowed)) {
+        if (! in_array($status, $allowed)) {
             $this->dispatch('notify', [
                 'message' => 'Invalid status transition!',
             ]);
+
             return;
         }
 
@@ -249,10 +346,10 @@ class OrderList extends Component
         $order->save();
 
         // Send whatsapp message for order dispatched
-        if($status == 'dispatched'){
-            try{
+        if ($status == 'dispatched') {
+            try {
                 $watiService = new WatiService;
-            
+
                 $watiService->sendTemplateMessage(
                     mobile: $order->billing_phone,
                     templateName: 'order_packed_new',
@@ -269,7 +366,7 @@ class OrderList extends Component
                 dd($e->getMessage());
             }
         }
-        
+
         // Send review mail when order is completed
         if ($status === 'complete') {
             try {
@@ -284,23 +381,24 @@ class OrderList extends Component
         }
 
         $this->dispatch('notify', [
-                'message' => 'Order status updated!',
-            ]);
+            'message' => 'Order status updated!',
+        ]);
     }
-    
+
     /**
      * Resend order email to User
      */
-    public function resendUserEmail($orderId){
+    public function resendUserEmail($orderId)
+    {
         $order = Order::find($orderId);
 
         try {
-            if($order->is_modified == 1){
+            if ($order->is_modified == 1) {
                 Mail::to($order->billing_email)->send(new OrderModifiedMail($order, false, 'Your order has been modified.'));
-            }else{
+            } else {
                 Mail::to($order->billing_email)->send(new OrderPlacedMail($order, false, 'Your order has been placed.'));
             }
-            //Mail::to($order->billing_email)->send(new OrderPlacedMail($order, false, 'Your order has been placed.'));
+            // Mail::to($order->billing_email)->send(new OrderPlacedMail($order, false, 'Your order has been placed.'));
             $this->dispatch('notify', [
                 'message' => 'Email send successfully!',
             ]);
@@ -314,17 +412,18 @@ class OrderList extends Component
     /**
      * Resend order email to Admin
      */
-    public function resendAdminEmail($orderId){
+    public function resendAdminEmail($orderId)
+    {
         $order = Order::find($orderId);
 
         try {
             $emails = explode(',', env('ADMIN_EMAILS'));
-            if($order->is_modified == 1){
-                Mail::to(["satnam1122@gmail.com","order@swetonspeakers.com"])->send(new OrderModifiedMail($order, true));
-            }else{
+            if ($order->is_modified == 1) {
+                Mail::to(['satnam1122@gmail.com', 'order@swetonspeakers.com'])->send(new OrderModifiedMail($order, true));
+            } else {
                 Mail::to($emails)->send(new OrderPlacedMail($order, true));
             }
-            
+
             $this->dispatch('notify', [
                 'message' => 'Email send successfully!',
             ]);
@@ -337,37 +436,36 @@ class OrderList extends Component
 
     public function render()
     {
-        $orderQuery = Order::with('orderitems', 'orderitems.product','user');
-        
+        $orderQuery = Order::with('orderitems', 'orderitems.product', 'user');
+
         // Restrict Subadmin orders
-        if(auth()->user()->can('isSubadmin') && !auth()->user()->can('isAdmin')){
+        if (auth()->user()->can('isSubadmin') && ! auth()->user()->can('isAdmin')) {
             $orderQuery->where('payment_status', 'success');
         }
-        
+
         if ($this->search) {
-            $orderQuery->where('order_number', 'LIKE', '%' . $this->search . '%');
+            $orderQuery->where('order_number', 'LIKE', '%'.$this->search.'%');
         }
-        
-        if($this->isModified !== ''){
+
+        if ($this->isModified !== '') {
             $orderQuery->where('is_modified', $this->isModified);
         }
 
-        
-        if($this->orderStatus){
+        if ($this->orderStatus) {
             $orderQuery->where('order_status', $this->orderStatus);
         }
-        if($this->paymentStatus){
+        if ($this->paymentStatus) {
             $orderQuery->where('payment_status', $this->paymentStatus);
         }
-        if($this->deliveryPartner){
-            if($this->deliveryPartner === 'none'){
+        if ($this->deliveryPartner) {
+            if ($this->deliveryPartner === 'none') {
                 $orderQuery->whereNull('awb_partner');
             } else {
                 $orderQuery->where('awb_partner', $this->deliveryPartner);
             }
         }
 
-        if($this->dateFrom && $this->dateTo){
+        if ($this->dateFrom && $this->dateTo) {
             $orderQuery->whereBetween('order_date', [
                 Carbon::parse($this->dateFrom)->startOfDay(),
                 Carbon::parse($this->dateTo)->endOfDay(),
@@ -376,15 +474,15 @@ class OrderList extends Component
 
         if ($this->userSearch) {
             $orderQuery->whereHas('user', function ($q) {
-                  $q->where('name', 'LIKE', '%' . $this->userSearch . '%')
-                    ->orWhere('email', 'LIKE', '%' . $this->userSearch . '%')
-                    ->orWhere('phone_number', 'LIKE', '%' . $this->userSearch . '%');
-              });
+                $q->where('name', 'LIKE', '%'.$this->userSearch.'%')
+                    ->orWhere('email', 'LIKE', '%'.$this->userSearch.'%')
+                    ->orWhere('phone_number', 'LIKE', '%'.$this->userSearch.'%');
+            });
         }
 
-        $orders = $orderQuery->latest()->paginate($this->perPage);  
+        $orders = $orderQuery->latest()->paginate($this->perPage);
 
-        return view('livewire.admin.order-list',[
+        return view('livewire.admin.order-list', [
             'orders' => $orders,
         ]);
     }
