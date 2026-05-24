@@ -27,12 +27,11 @@
 
             <div class="flex gap-2">
                 {{-- Payment Status --}}
-                <span class="px-3 py-1 text-sm rounded-full font-semibold
-                    {{ $order->payment_status === 'success'
-                        ? 'bg-green-100 text-green-700'
-                        : ($order->payment_status === 'processing'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : 'bg-red-100 text-red-700') }}">
+                @php
+                    $paymentStyle = $order->paymentStatusStyle();
+                @endphp
+                <span class="px-3 py-1 text-sm rounded-full font-semibold border
+                    {{ $paymentStyle['bg'] }}">
                     💳 {{ ucfirst($order->payment_status) }}
                 </span>
 

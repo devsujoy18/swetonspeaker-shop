@@ -35,10 +35,11 @@
                     <p><span class="font-medium">Order Date:</span> {{ $order->order_date ? $order->order_date->format('d M Y, h:i A') : $order->created_at->format('d M Y, h:i A') }}</p>
                     <p><span class="font-medium">Payment Method:</span> {{ strtoupper($order->payment_method) }}</p>
                     <p><span class="font-medium">Payment Status:</span> 
-                        <span class="px-2 py-1 text-xs rounded-full 
-                            @if($order->payment_status === 'success') bg-green-200 text-green-800 
-                            @elseif($order->payment_status === 'processing') bg-yellow-200 text-yellow-800 
-                            @else bg-red-200 text-red-800 @endif">
+                        @php
+                            $paymentStyle = $order->paymentStatusStyle();
+                        @endphp
+                        <span class="px-2 py-1 text-xs rounded-full border
+                            {{ $paymentStyle['bg'] }}">
                             {{ ucfirst($order->payment_status) }}
                         </span>
                     </p>

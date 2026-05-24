@@ -6,7 +6,10 @@
                 <div class="text-lg font-semibold text-gray-900">{{ $order->order_number }}</div>
             </div>
             <div class="flex gap-3">
-                <div class="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700 border border-green-300">
+                @php
+                    $paymentStyle = $order->paymentStatusStyle();
+                @endphp
+                <div class="px-3 py-1 text-xs rounded-full border {{ $paymentStyle['bg'] }}">
                     Payment: {{ ucfirst($order->payment_status) }}
                 </div>
                 <div class="px-3 py-1 text-xs rounded-full bg-indigo-100 text-indigo-700 border border-indigo-300">

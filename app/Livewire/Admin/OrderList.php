@@ -224,6 +224,26 @@ class OrderList extends Component
     public function updatePaymentStatus($orderId, $status)
     {
         $order = Order::findOrFail($orderId);
+
+        if ($status === 'refunded') {
+            if (! $order->canRefundPayment()) {
+                $this->dispatch('notify', [
+                    'message' => 'Refund is only available for cancelled orders with successful payments.',
+                ]);
+
+                return;
+            }
+
+            $order->payment_status = 'refunded';
+            $order->save();
+
+            $this->dispatch('notify', [
+                'message' => 'Payment refunded successfully!',
+            ]);
+
+            return;
+        }
+
         $order->payment_status = $status;
         $order->save();
 
@@ -302,7 +322,7 @@ class OrderList extends Component
         $map = [
             'processing' => ['confirmed', 'cancelled'],
             'confirmed' => ['dispatched'],
-            'dispatched' => ['complete'],
+            'dispatched' => ['complete', 'cancelled'],
             'complete' => ['complete'],
             'cancelled' => ['cancelled'],
         ];
@@ -440,7 +460,7 @@ class OrderList extends Component
 
         // Restrict Subadmin orders
         if (auth()->user()->can('isSubadmin') && ! auth()->user()->can('isAdmin')) {
-            $orderQuery->where('payment_status', 'success');
+            $orderQuery->whereIn('payment_status', ['success', 'refunded']);
         }
 
         if ($this->search) {

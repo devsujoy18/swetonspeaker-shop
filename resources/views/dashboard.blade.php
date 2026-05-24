@@ -60,15 +60,12 @@
             
                                 {{-- Payment Status Badge --}}
                                 <td class="p-2 text-center">
+                                    @php
+                                        $paymentStyle = $order->paymentStatusStyle();
+                                    @endphp
                                     <span class="
                                         px-3 py-1 text-xs rounded-full font-semibold border 
-                                        @if($order->payment_status === 'processing')
-                                            bg-yellow-100 text-yellow-700 border-yellow-300
-                                        @elseif($order->payment_status === 'success')
-                                            bg-green-100 text-green-700 border-green-300
-                                        @else
-                                            bg-red-100 text-red-700 border-red-300
-                                        @endif
+                                        {{ $paymentStyle['bg'] }}
                                     ">
                                         {{ ucfirst($order->payment_status) }}
                                     </span>
@@ -255,15 +252,12 @@
                                         </td>
 
                                         <td class="p-2 text-center">
+                                            @php
+                                                $paymentStyle = $order->paymentStatusStyle();
+                                            @endphp
                                             <span class="
                                                 px-3 py-1 text-xs rounded-full font-semibold border 
-                                                @if($order->payment_status === 'processing')
-                                                    bg-yellow-100 text-yellow-700 border-yellow-300
-                                                @elseif($order->payment_status === 'success')
-                                                    bg-green-100 text-green-700 border-green-300
-                                                @else
-                                                    bg-red-100 text-red-700 border-red-300
-                                                @endif
+                                                {{ $paymentStyle['bg'] }}
                                             ">
                                                 {{ ucfirst($order->payment_status) }}
                                             </span>

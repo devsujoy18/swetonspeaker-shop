@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\User;
 use Carbon\Carbon;
@@ -14,21 +13,23 @@ class DashboardController extends Controller
         $user = auth()->user();
 
         if ($user->can('isAdmin') || $user->can('isSubadmin')) {
+            $successfulOrders = Order::query()
+                ->where('payment_status', 'success')
+                ->where('order_status', '!=', 'cancelled');
+
             // Stats
             $totalOrders = Order::count();
-            $totalRevenue = Order::where('payment_status', 'success')->sum('total');
+            $totalRevenue = (clone $successfulOrders)->sum('total');
             $totalUsers = User::where('user_type', 'LIKE', '%user%')->count();
             $pendingOrders = Order::where('order_status', 'processing')->count();
 
             // Charts: last 7 days orders & revenue
             $dates = collect(range(6, 0))->map(fn ($i) => Carbon::today()->subDays($i)->format('Y-m-d'));
-            
-            $ordersData = $dates->map(fn ($date) =>
-                Order::whereDate('order_date', $date)->where('payment_status', 'success')->count()
+
+            $ordersData = $dates->map(fn ($date) => (clone $successfulOrders)->whereDate('order_date', $date)->count()
             );
 
-            $revenueData = $dates->map(fn ($date) =>
-                Order::whereDate('order_date', $date)->where('payment_status', 'success')->sum('total')
+            $revenueData = $dates->map(fn ($date) => (clone $successfulOrders)->whereDate('order_date', $date)->sum('total')
             );
 
             // Latest 10 entries
@@ -59,6 +60,6 @@ class DashboardController extends Controller
         }
 
         abort(403, 'Unauthorized page access');
-        
+
     }
 }

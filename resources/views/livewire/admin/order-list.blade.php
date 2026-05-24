@@ -19,6 +19,7 @@
             <option value="success">Success</option>
             <option value="processing">Processing</option>
             <option value="cancelled">Cancelled</option>
+            <option value="refunded">Refunded</option>
         </select>
         @endcan
         <select wire:model.live="deliveryPartner" wire:loading.attr="disabled" class="border-gray-300 rounded-md">
@@ -157,16 +158,13 @@
                         <!-- Payment Status -->
                         <td class="px-4 py-3" x-data="{ paymentActionopen:false }" x-cloak>
                             {{-- Show the current status badge --}}
+                            @php
+                                $paymentStyle = $order->paymentStatusStyle();
+                            @endphp
                             <div class="mb-1">
                                 <span class="
                                     px-3 py-1 text-xs rounded-full font-semibold border 
-                                    @if($order->payment_status === 'processing')
-                                        bg-yellow-100 text-yellow-700 border-yellow-300
-                                    @elseif($order->payment_status === 'success')
-                                        bg-green-100 text-green-700 border-green-300
-                                    @else
-                                        bg-red-100 text-red-700 border-red-300
-                                    @endif
+                                    {{ $paymentStyle['bg'] }}
                                 ">
                                     {{ ucfirst($order->payment_status) }}
                                 </span>
@@ -214,6 +212,16 @@
                                         ❌ Cancel
                                     </button>
 
+                                </div>
+                            @elseif($order->canRefundPayment())
+                                <div class="mt-1">
+                                    <button
+                                        wire:click="updatePaymentStatus({{ $order->id }}, 'refunded')"
+                                        wire:confirm="Refund this payment?"
+                                        class="px-2 py-1 text-xs bg-amber-100 text-amber-700 
+                                               border border-amber-300 rounded-md hover:bg-amber-200 transition">
+                                        ↩ Refund
+                                    </button>
                                 </div>
                             @endif
                         </td>
@@ -296,14 +304,23 @@
                                 </button>
 
                             @elseif($order->order_status === 'dispatched')
-                                <button
-                                    x-show="statusActionopen"
-                                    wire:click="updateOrderStatus({{ $order->id }}, 'complete')"
-                                    wire:confirm="Mark order as COMPLETE?"
-                                    class="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300
-                                           rounded-md hover:bg-green-200 transition">
-                                    📦 Complete?
-                                </button>
+                                <div class="flex gap-2" x-show="statusActionopen">
+                                    <button
+                                        x-show="statusActionopen"
+                                        wire:click="updateOrderStatus({{ $order->id }}, 'complete')"
+                                        wire:confirm="Mark order as COMPLETE?"
+                                        class="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-300
+                                            rounded-md hover:bg-green-200 transition">
+                                        📦 Complete?
+                                    </button>
+                                    <button
+                                            wire:click="updateOrderStatus({{ $order->id }}, 'cancelled')"
+                                            wire:confirm="Cancel this order?"
+                                            class="px-2 py-1 text-xs bg-red-100 text-red-700 border border-red-300
+                                                rounded-md hover:bg-red-200 transition">
+                                            ❌ Cancel?
+                                    </button>
+                                </div>
 
                             @else
                                 <span class="text-xs text-gray-500 italic">No actions available</span>
