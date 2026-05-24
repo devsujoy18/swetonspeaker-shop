@@ -321,7 +321,7 @@ class OrderList extends Component
     {
         $map = [
             'processing' => ['confirmed', 'cancelled'],
-            'confirmed' => ['dispatched'],
+            'confirmed' => ['dispatched', 'cancelled'],
             'dispatched' => ['complete', 'cancelled'],
             'complete' => ['complete'],
             'cancelled' => ['cancelled'],

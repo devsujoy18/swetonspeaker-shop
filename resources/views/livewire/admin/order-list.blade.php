@@ -12,6 +12,7 @@
             <option value="confirmed">Confirmed</option>
             <option value="dispatched">Despatched</option>
             <option value="complete">Delivered</option>
+            <option value="cancelled">Cancelled</option>
         </select>
         @can('isAdmin')
         <select wire:model.live="paymentStatus" wire:loading.attr="disabled" class="border-gray-300 rounded-md">
@@ -296,6 +297,7 @@
                                 </div>
 
                             @elseif($order->order_status === 'confirmed')
+                            <div class="flex gap-2" x-show="statusActionopen">
                                 <button
                                     x-show="statusActionopen"
                                     wire:click="updateOrderStatus({{ $order->id }}, 'dispatched')"
@@ -305,6 +307,16 @@
                                     🚚 Dispatch?
                                 </button>
 
+                                @can('isAdmin')
+                                    <button
+                                            wire:click="updateOrderStatus({{ $order->id }}, 'cancelled')"
+                                            wire:confirm="Cancel this order?"
+                                            class="px-2 py-1 text-xs bg-red-100 text-red-700 border border-red-300
+                                                rounded-md hover:bg-red-200 transition">
+                                            ❌ Cancel?
+                                    </button>
+                                    @endcan
+                            </div>
                             @elseif($order->order_status === 'dispatched')
                                 <div class="flex gap-2" x-show="statusActionopen">
                                     <button
