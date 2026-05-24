@@ -214,6 +214,7 @@
 
                                 </div>
                             @elseif($order->canRefundPayment())
+                                @can('isAdmin')
                                 <div class="mt-1">
                                     <button
                                         wire:click="updatePaymentStatus({{ $order->id }}, 'refunded')"
@@ -223,6 +224,7 @@
                                         ↩ Refund
                                     </button>
                                 </div>
+                                @endcan
                             @endif
                         </td>
 
@@ -313,6 +315,7 @@
                                             rounded-md hover:bg-green-200 transition">
                                         📦 Complete?
                                     </button>
+                                    @can('isAdmin')
                                     <button
                                             wire:click="updateOrderStatus({{ $order->id }}, 'cancelled')"
                                             wire:confirm="Cancel this order?"
@@ -320,6 +323,7 @@
                                                 rounded-md hover:bg-red-200 transition">
                                             ❌ Cancel?
                                     </button>
+                                    @endcan
                                 </div>
 
                             @else
