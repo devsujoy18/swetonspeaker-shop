@@ -14,11 +14,12 @@ class Order extends Model
         'shipping_same_as_billing', 'shipping_name', 'shipping_email', 'shipping_phone',
         'shipping_zip', 'shipping_locality', 'shipping_street', 'shipping_city', 'shipping_state',
         'shipping_landmark', 'shipping_alternate_phone',
-        'subtotal', 'total', 'payment_method', 'payment_status', 'order_status', 'token', 'awb_partner', 'awb_number', 'order_sl_no', 'is_modified',
+        'subtotal', 'total', 'refunded_amount', 'payment_method', 'payment_status', 'order_status', 'token', 'awb_partner', 'awb_number', 'order_sl_no', 'is_modified',
     ];
 
     protected $casts = [
         'order_date' => 'datetime',
+        'refunded_amount' => 'decimal:2',
     ];
 
     protected static function boot()
@@ -72,6 +73,35 @@ class Order extends Model
                 'bg' => 'bg-gray-100 text-gray-700 border-gray-300',
             ],
         };
+    }
+
+    public function paymentStatusLabel(): string
+    {
+        return match ($this->payment_status) {
+            'processing' => 'Processing',
+            'success' => 'Success',
+            'refunded' => 'Refunded',
+            'cancelled' => 'Cancelled',
+            default => ucfirst((string) $this->payment_status),
+        };
+    }
+
+    public function refundableAmountRemaining(): float
+    {
+        return max(0, (float) $this->total - (float) $this->refunded_amount);
+    }
+
+    public function netAmount(): float
+    {
+        if ($this->payment_status === 'refunded') {
+            return max(0, (float) $this->total - (float) $this->refunded_amount);
+        }
+
+        if ($this->payment_status === 'success' && $this->order_status !== 'cancelled') {
+            return (float) $this->total;
+        }
+
+        return 0.0;
     }
 
     public function canRefundPayment(): bool

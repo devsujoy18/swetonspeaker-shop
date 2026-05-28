@@ -46,6 +46,14 @@ class OrderList extends Component
 
     public $orderSlNo = null;
 
+    public $selectedRefundOrderId = null;
+
+    public $selectedRefundOrder = null;
+
+    public $refundAmount = null;
+
+    public $refundModalOpen = false;
+
     public $deliveryPartner = '';
 
     public $isModified = '';
@@ -216,12 +224,59 @@ class OrderList extends Component
         $this->orderSlNoModalOpen = false;
     }
 
+    public function openRefundModal($orderId)
+    {
+        $order = Order::find($orderId);
+
+        if (! $order) {
+            $this->dispatch('notify', [
+                'message' => 'Order not found.',
+            ]);
+
+            return;
+        }
+
+        if (! $order->canRefundPayment()) {
+            $this->dispatch('notify', [
+                'message' => 'Refund is only available for cancelled orders with successful payments.',
+            ]);
+
+            return;
+        }
+
+        $this->selectedRefundOrderId = $order->id;
+        $this->selectedRefundOrder = $order;
+        $this->refundAmount = number_format($order->refundableAmountRemaining(), 2, '.', '');
+        $this->refundModalOpen = true;
+        $this->resetErrorBag('refundAmount');
+    }
+
+    public function saveRefund()
+    {
+        $this->validate([
+            'refundAmount' => 'required|numeric|min:0.01',
+        ]);
+
+        $order = Order::find($this->selectedRefundOrderId);
+
+        if (! $order) {
+            $this->dispatch('notify', [
+                'message' => 'Order not found.',
+            ]);
+            $this->refundModalOpen = false;
+
+            return;
+        }
+
+        $this->updatePaymentStatus($order->id, 'refunded', (float) $this->refundAmount);
+    }
+
     public function toggleExpand($orderId)
     {
         $this->expandedOrderId = ($this->expandedOrderId === $orderId) ? null : $orderId;
     }
 
-    public function updatePaymentStatus($orderId, $status)
+    public function updatePaymentStatus($orderId, $status, $refundAmount = null)
     {
         $order = Order::findOrFail($orderId);
 
@@ -234,12 +289,36 @@ class OrderList extends Component
                 return;
             }
 
+            $amountToRefund = $refundAmount !== null
+                ? round((float) $refundAmount, 2)
+                : round($order->refundableAmountRemaining(), 2);
+
+            if ($amountToRefund <= 0) {
+                $this->dispatch('notify', [
+                    'message' => 'Refund amount must be greater than zero.',
+                ]);
+
+                return;
+            }
+
+            if ($amountToRefund > $order->refundableAmountRemaining()) {
+                $this->addError('refundAmount', 'Refund amount cannot exceed the remaining refundable amount.');
+
+                return;
+            }
+
+            $order->refunded_amount = $amountToRefund;
             $order->payment_status = 'refunded';
             $order->save();
 
             $this->dispatch('notify', [
                 'message' => 'Payment refunded successfully!',
             ]);
+
+            $this->refundModalOpen = false;
+            $this->selectedRefundOrderId = null;
+            $this->selectedRefundOrder = null;
+            $this->refundAmount = null;
 
             return;
         }

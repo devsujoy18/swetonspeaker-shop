@@ -167,8 +167,13 @@
                                     px-3 py-1 text-xs rounded-full font-semibold border 
                                     {{ $paymentStyle['bg'] }}
                                 ">
-                                    {{ ucfirst($order->payment_status) }}
+                                    {{ $order->paymentStatusLabel() }}
                                 </span>
+                                @if($order->payment_status === 'refunded')
+                                    <div class="mt-1 text-xs text-gray-500">
+                                        Refunded: ₹{{ number_format($order->refunded_amount, 2) }}
+                                    </div>
+                                @endif
                                  @if($order->payment_status == 'processing')
                                 <button 
                                     @click="paymentActionopen = !paymentActionopen"
@@ -218,8 +223,7 @@
                                 @can('isAdmin')
                                 <div class="mt-1">
                                     <button
-                                        wire:click="updatePaymentStatus({{ $order->id }}, 'refunded')"
-                                        wire:confirm="Refund this payment?"
+                                        wire:click="openRefundModal({{ $order->id }})"
                                         class="px-2 py-1 text-xs bg-amber-100 text-amber-700 
                                                border border-amber-300 rounded-md hover:bg-amber-200 transition">
                                         ↩ Refund
@@ -578,6 +582,57 @@
                 >
                     <span wire:loading.remove wire:target="saveOrderSlNo">Save SL No</span>
                     <span wire:loading wire:target="saveOrderSlNo">Saving...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($refundModalOpen)
+    <div class="fixed inset-0 bg-black/50 z-50 flex justify-center items-center">
+        <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
+            <h2 class="text-lg font-semibold mb-1">Record Refund</h2>
+            <p class="text-xs text-gray-500 mb-4">
+                Enter the refund amount for this order. The status will be marked as refunded.
+            </p>
+
+            <label class="font-medium text-sm">Refund Amount *</label>
+            <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                wire:model="refundAmount"
+                class="w-full mt-1 mb-2 border-gray-300 rounded-md"
+                placeholder="Enter refund amount"
+            >
+
+            @error('refundAmount')
+                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+            @enderror
+
+            @if($selectedRefundOrder)
+                <div class="text-xs text-gray-500 mb-4">
+                    Total: ₹{{ number_format($selectedRefundOrder->total, 2) }} |
+                    Remaining refundable: ₹{{ number_format($selectedRefundOrder->refundableAmountRemaining(), 2) }}
+                </div>
+            @endif
+
+            <div class="flex justify-end gap-3 mt-4">
+                <button
+                    wire:click="$set('refundModalOpen', false)"
+                    class="px-4 py-2 bg-gray-200 rounded-md"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    wire:click="saveRefund"
+                    wire:loading.attr="disabled"
+                    wire:target="saveRefund"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                >
+                    <span wire:loading.remove wire:target="saveRefund">Save Refund</span>
+                    <span wire:loading wire:target="saveRefund">Saving...</span>
                 </button>
             </div>
         </div>

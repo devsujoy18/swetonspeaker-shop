@@ -3,6 +3,7 @@
 use App\Livewire\Admin\OrderList;
 use App\Models\Order;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -43,6 +44,7 @@ beforeEach(function () {
         $table->string('billing_phone')->nullable();
         $table->decimal('subtotal', 10, 2)->default(0);
         $table->decimal('total', 10, 2)->default(0);
+        $table->decimal('refunded_amount', 10, 2)->default(0);
         $table->string('payment_status')->default('processing');
         $table->string('order_status')->default('processing');
         $table->timestamp('order_date')->nullable();
@@ -137,9 +139,43 @@ test('admin can refund a cancelled paid order from the payment status column', f
         ->call('updatePaymentStatus', $order->id, 'refunded');
 
     expect($order->refresh()->payment_status)->toBe('refunded');
+    expect((float) $order->refresh()->refunded_amount)->toBe(499.0);
+
+    Livewire::test(OrderList::class)
+        ->call('updatePaymentStatus', $order->id, 'refunded', 100);
+
+    expect((float) $order->refresh()->refunded_amount)->toBe(499.0);
 });
 
-test('dashboard revenue ignores cancelled and refunded orders', function () {
+test('admin can record a refund amount for a cancelled paid order', function () {
+    $admin = User::factory()->create([
+        'user_type' => 'admin',
+    ]);
+
+    $order = Order::create([
+        'billing_name' => 'Refund Amount Customer',
+        'billing_email' => 'partial@example.com',
+        'billing_phone' => '9999999995',
+        'total' => 1024.00,
+        'payment_status' => 'success',
+        'order_status' => 'cancelled',
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(OrderList::class)
+        ->call('openRefundModal', $order->id)
+        ->assertSet('refundModalOpen', true)
+        ->set('refundAmount', 524)
+        ->call('saveRefund')
+        ->assertHasNoErrors('refundAmount')
+        ->assertSet('refundModalOpen', false);
+
+    expect($order->refresh()->payment_status)->toBe('refunded');
+    expect((float) $order->refresh()->refunded_amount)->toBe(524.0);
+});
+
+test('dashboard revenue counts net refunded amounts', function () {
     $admin = User::factory()->create([
         'user_type' => 'admin',
     ]);
@@ -167,6 +203,17 @@ test('dashboard revenue ignores cancelled and refunded orders', function () {
         'billing_email' => 'refunded@example.com',
         'billing_phone' => '9999999996',
         'total' => 60.00,
+        'refunded_amount' => 60.00,
+        'payment_status' => 'refunded',
+        'order_status' => 'cancelled',
+    ]);
+
+    Order::create([
+        'billing_name' => 'Refunded Amount Order',
+        'billing_email' => 'partial-refunded@example.com',
+        'billing_phone' => '9999999995',
+        'total' => 100.00,
+        'refunded_amount' => 24.00,
         'payment_status' => 'refunded',
         'order_status' => 'cancelled',
     ]);
@@ -175,5 +222,51 @@ test('dashboard revenue ignores cancelled and refunded orders', function () {
 
     $response->assertOk();
 
-    expect((float) $response->viewData('totalRevenue'))->toBe(120.0);
+    expect((float) $response->viewData('totalRevenue'))->toBe(196.0);
+});
+
+test('dashboard charts only count orders and revenue on their matching day', function () {
+    Carbon::setTestNow(Carbon::parse('2026-05-28 12:00:00'));
+
+    try {
+        $admin = User::factory()->create([
+            'user_type' => 'admin',
+        ]);
+
+        $dayOneOrder = Order::create([
+            'billing_name' => 'Day One Success',
+            'billing_email' => 'day-one@example.com',
+            'billing_phone' => '9999999994',
+            'total' => 100.00,
+            'payment_status' => 'success',
+            'order_status' => 'confirmed',
+        ]);
+
+        $dayOneOrder->forceFill([
+            'order_date' => Carbon::parse('2026-05-22'),
+        ])->saveQuietly();
+
+        $daySevenOrder = Order::create([
+            'billing_name' => 'Day Seven Refunded',
+            'billing_email' => 'day-seven@example.com',
+            'billing_phone' => '9999999993',
+            'total' => 75.00,
+            'refunded_amount' => 25.00,
+            'payment_status' => 'refunded',
+            'order_status' => 'cancelled',
+        ]);
+
+        $daySevenOrder->forceFill([
+            'order_date' => Carbon::parse('2026-05-28'),
+        ])->saveQuietly();
+
+        $response = $this->actingAs($admin)->get(route('dashboard'));
+
+        $response->assertOk();
+
+        expect($response->viewData('ordersData')->all())->toBe([1, 0, 0, 0, 0, 0, 1]);
+        expect($response->viewData('revenueData')->all())->toBe([100.0, 0, 0, 0, 0, 0, 50.0]);
+    } finally {
+        Carbon::setTestNow();
+    }
 });

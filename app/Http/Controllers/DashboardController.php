@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 
 class DashboardController extends Controller
 {
@@ -13,24 +14,20 @@ class DashboardController extends Controller
         $user = auth()->user();
 
         if ($user->can('isAdmin') || $user->can('isSubadmin')) {
-            $successfulOrders = Order::query()
-                ->where('payment_status', 'success')
-                ->where('order_status', '!=', 'cancelled');
+            $paidOrders = $this->paidOrdersQuery();
 
             // Stats
             $totalOrders = Order::count();
-            $totalRevenue = (clone $successfulOrders)->sum('total');
+            $totalRevenue = (clone $paidOrders)->get()->sum(fn (Order $order) => $order->netAmount());
             $totalUsers = User::where('user_type', 'LIKE', '%user%')->count();
             $pendingOrders = Order::where('order_status', 'processing')->count();
 
             // Charts: last 7 days orders & revenue
             $dates = collect(range(6, 0))->map(fn ($i) => Carbon::today()->subDays($i)->format('Y-m-d'));
 
-            $ordersData = $dates->map(fn ($date) => (clone $successfulOrders)->whereDate('order_date', $date)->count()
-            );
+            $ordersData = $dates->map(fn ($date) => (clone $paidOrders)->whereDate('order_date', $date)->count());
 
-            $revenueData = $dates->map(fn ($date) => (clone $successfulOrders)->whereDate('order_date', $date)->sum('total')
-            );
+            $revenueData = $dates->map(fn ($date) => (clone $paidOrders)->whereDate('order_date', $date)->get()->sum(fn (Order $order) => $order->netAmount()));
 
             // Latest 10 entries
             $latestOrders = Order::latest()->take(10)->get();
@@ -61,5 +58,18 @@ class DashboardController extends Controller
 
         abort(403, 'Unauthorized page access');
 
+    }
+
+    private function paidOrdersQuery(): Builder
+    {
+        return Order::query()
+            ->where(function (Builder $query): void {
+                $query->where(function (Builder $query): void {
+                    $query->where('payment_status', 'success')
+                        ->where('order_status', '!=', 'cancelled');
+                })->orWhere(function (Builder $query): void {
+                    $query->where('payment_status', 'refunded');
+                });
+            });
     }
 }
