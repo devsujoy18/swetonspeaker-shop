@@ -96,6 +96,7 @@ Route::middleware('auth')->group(function () {
         })->name('products.manage');
 
         Route::get('orders', [OrderController::class, 'allOrders'])->name('admin.orders.index');
+        Route::get('orders/account-ledger', [ReportController::class, 'accountLedger'])->name('admin.orders.ledger');
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
         Route::get('/orders/{order}', [OrderController::class, 'showDetails'])->name('admin.orders.show');
         Route::get('users', [UserController::class, 'index'])->name('admin.users.index');

@@ -62,14 +62,6 @@ class DashboardController extends Controller
 
     private function paidOrdersQuery(): Builder
     {
-        return Order::query()
-            ->where(function (Builder $query): void {
-                $query->where(function (Builder $query): void {
-                    $query->where('payment_status', 'success')
-                        ->where('order_status', '!=', 'cancelled');
-                })->orWhere(function (Builder $query): void {
-                    $query->where('payment_status', 'refunded');
-                });
-            });
+        return Order::financialLedger();
     }
 }

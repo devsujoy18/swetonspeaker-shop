@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -107,5 +108,15 @@ class Order extends Model
     public function canRefundPayment(): bool
     {
         return $this->order_status === 'cancelled' && $this->payment_status === 'success';
+    }
+
+    public function scopeFinancialLedger(Builder $query): Builder
+    {
+        return $query->where(function (Builder $query): void {
+            $query->where(function (Builder $query): void {
+                $query->where('payment_status', 'success')
+                    ->where('order_status', '!=', 'cancelled');
+            })->orWhere('payment_status', 'refunded');
+        });
     }
 }

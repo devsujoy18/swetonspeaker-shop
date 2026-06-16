@@ -12,8 +12,9 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
-        <link rel="stylesheet" href="{{ asset('build/assets/app-C_CyvMDo.css') }}">
-        <script type="module" src="{{ asset('build/assets/app-l0sNRNKZ.js') }}"></script>
+        {{-- <link rel="stylesheet" href="{{ asset('build/assets/app-C_CyvMDo.css') }}">
+        <script type="module" src="{{ asset('build/assets/app-l0sNRNKZ.js') }}"></script> --}}
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
     </head>
     <body class="font-sans antialiased">
