@@ -2,57 +2,83 @@
 
 namespace App\Livewire\Admin;
 
-use Livewire\Component;
-use Livewire\Attributes\Computed;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
-use App\Models\Category;
 use Darryldecode\Cart\Facades\CartFacade as Cart;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
+use Livewire\Component;
 
 class EditOrderComponent extends Component
 {
     public Order $order;
+
     public string $cartSession;
 
     public array $cartItems = [];
+
     public array $quantities = [];
 
     public float $subtotal = 0;
+
     public float $total = 0;
 
     public string $search = '';
+
     public string $categoryId = '';
+
     public $categories;
 
     public array $selectedAttributes = [];
+
     public array $addErrors = [];
 
     public bool $shippingSameAsBilling = false;
 
     public string $billingName = '';
+
     public string $billingEmail = '';
+
     public string $billingPhone = '';
+
     public string $billingZip = '';
+
     public string $billingLocality = '';
+
     public string $billingStreet = '';
+
     public string $billingCity = '';
+
     public string $billingState = '';
+
     public string $billingLandmark = '';
+
     public ?string $billingAlternatePhone = null;
+
     public ?string $companyName = null;
+
     public ?string $gstNo = null;
 
     public string $shippingName = '';
+
     public string $shippingEmail = '';
+
     public string $shippingPhone = '';
+
     public string $shippingZip = '';
+
     public string $shippingLocality = '';
+
     public string $shippingStreet = '';
+
     public string $shippingCity = '';
+
     public string $shippingState = '';
+
     public string $shippingLandmark = '';
+
     public ?string $shippingAlternatePhone = null;
 
     public function mount(Order $order): void
@@ -64,7 +90,7 @@ class EditOrderComponent extends Component
         // }
 
         $this->order = $order->load('orderitems.product.priceAttributes');
-        $this->cartSession = 'order-edit-' . $this->order->id;
+        $this->cartSession = 'order-edit-'.$this->order->id;
 
         $this->categories = Category::orderBy('name')->get();
 
@@ -143,11 +169,12 @@ class EditOrderComponent extends Component
 
         foreach ($this->order->orderitems as $item) {
             $cart->add([
-                'id' => $this->cartItemId($item->product_id, $item->price_attribute_id),
-                'name' => $item->product_name,
+                'id' => $this->cartItemId($item->product_id, $item->price_attribute_id, $item->id),
+                'name' => $item->product_name ?? $item->product?->name ?? 'Order item',
                 'price' => $item->price,
                 'quantity' => $item->quantity,
                 'attributes' => [
+                    'order_item_id' => $item->id,
                     'product_id' => $item->product_id,
                     'price_attribute_id' => $item->price_attribute_id,
                     'shop_description' => $item->shop_description,
@@ -213,12 +240,14 @@ class EditOrderComponent extends Component
         if ($product->priceAttributes->isNotEmpty()) {
             if (! $priceAttributeId) {
                 $this->addErrors[$productId] = 'Select a price option.';
+
                 return;
             }
 
             $attribute = $product->priceAttributes->firstWhere('id', (int) $priceAttributeId);
             if (! $attribute) {
                 $this->addErrors[$productId] = 'Invalid price option.';
+
                 return;
             }
         }
@@ -236,7 +265,7 @@ class EditOrderComponent extends Component
         } else {
             $cart->add([
                 'id' => $cartId,
-                'name' => $attribute ? ($product->name . ' (' . $attribute->name . ')') : $product->name,
+                'name' => $attribute ? ($product->name.' ('.$attribute->name.')') : $product->name,
                 'price' => (float) ($attribute?->price ?? $product->price),
                 'quantity' => 1,
                 'attributes' => [
@@ -260,6 +289,7 @@ class EditOrderComponent extends Component
 
         if ($cartItems->isEmpty()) {
             $this->addError('cart', 'At least one item is required.');
+
             return;
         }
 
@@ -309,19 +339,24 @@ class EditOrderComponent extends Component
 
             $existingItems = $this->order->orderitems()
                 ->get()
-                ->keyBy(fn (OrderItem $item) => $this->itemKey($item->product_id, $item->price_attribute_id));
+                ->keyBy(fn (OrderItem $item) => $this->itemKey($item->product_id, $item->price_attribute_id, $item->id));
 
             $usedKeys = [];
 
             foreach ($cartItems as $cartItem) {
-                $productId = (int) ($cartItem->attributes->product_id ?? $cartItem->id);
+                $productId = $cartItem->attributes->product_id ?? null;
                 $priceAttributeId = $cartItem->attributes->price_attribute_id ?? null;
-                $key = $this->itemKey($productId, $priceAttributeId);
+                $orderItemId = $cartItem->attributes->order_item_id ?? null;
+                $key = $this->itemKey(
+                    $productId !== null ? (int) $productId : null,
+                    $priceAttributeId !== null ? (int) $priceAttributeId : null,
+                    $orderItemId !== null ? (int) $orderItemId : null,
+                );
                 $usedKeys[] = $key;
 
                 $payload = [
-                    'product_id' => $productId,
-                    'price_attribute_id' => $priceAttributeId,
+                    'product_id' => $productId !== null ? (int) $productId : null,
+                    'price_attribute_id' => $priceAttributeId !== null ? (int) $priceAttributeId : null,
                     'shop_description' => $cartItem->attributes->shop_description ?? null,
                     'product_name' => $cartItem->name,
                     'quantity' => $cartItem->quantity,
@@ -351,14 +386,18 @@ class EditOrderComponent extends Component
         ]);
     }
 
-    protected function cartItemId(int $productId, $priceAttributeId): string
+    protected function cartItemId(?int $productId, ?int $priceAttributeId, ?int $orderItemId = null): string
     {
-        return $priceAttributeId ? $productId . '-' . $priceAttributeId : (string) $productId;
+        if ($productId === null) {
+            return 'order-item-'.$orderItemId;
+        }
+
+        return $priceAttributeId ? $productId.'-'.$priceAttributeId : (string) $productId;
     }
 
-    protected function itemKey(int $productId, $priceAttributeId): string
+    protected function itemKey(?int $productId, ?int $priceAttributeId, ?int $orderItemId = null): string
     {
-        return $productId . '|' . ($priceAttributeId ?? '');
+        return $this->cartItemId($productId, $priceAttributeId, $orderItemId);
     }
 
     #[Computed]
@@ -372,8 +411,8 @@ class EditOrderComponent extends Component
             })
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                        ->orWhere('shop_description', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('shop_description', 'like', '%'.$this->search.'%');
                 });
             })
             ->with('priceAttributes')
