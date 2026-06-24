@@ -220,16 +220,16 @@
                                     <p class="text-sm text-gray-600">( {{ $product->combinations->pluck('name')->join(', ') }} )</p>
                                 </div>
 
-                                <div class="mt-2 flex flex-col items-center">
-                                    @if($product->priceAttributes->isNotEmpty())
-                                        @foreach($product->priceAttributes as $attribute)
+                            <div class="mt-2 flex flex-col items-center">
+                                    @if($product->hasPurchasablePriceAttributes())
+                                        @foreach($product->validPriceAttributes() as $attribute)
                                             <div class="mt-1">
                                                 <span class="text-sm text-gray-500 mr-2">{{ $attribute->name }}:</span> 
                                                 <span class="line-through text-sm text-gray-500 mr-1">₹ {{ number_format($attribute->mrp, 0) }}</span>
                                                 <span class="text-lg text-green-600 font-bold">₹ {{ number_format($attribute->price, 0) }}</span>
                                             </div>
                                         @endforeach
-                                    @else
+                                    @elseif($product->hasPurchasableBasePrice())
                                         <div class="mt-1">
                                             @if($product->shop_description)
                                             <span class="text-sm text-gray-500 mr-2">{{ $product->shop_description }}:</span>
@@ -237,12 +237,16 @@
                                             <span class="line-through text-sm text-gray-500 mr-1">₹ {{ number_format($product->mrp, 0) }}</span>
                                             <span class="text-lg text-green-600 font-bold">₹ {{ number_format($product->price, 0) }}</span>
                                         </div>
+                                    @else
+                                        <div class="mt-1 text-sm font-medium text-red-600">
+                                            Price unavailable
+                                        </div>
                                     @endif
                                 </div>
 
 
                                 <div class="mt-2 flex gap-2">
-                                    @if($product->priceAttributes->isNotEmpty())
+                                    @if($product->hasPurchasablePriceAttributes())
                                         <button 
                                             wire:click="openAttributeModal({{ $product->id }}, 'buy-now')"
                                             class="w-1/2 bg-red-600 hover:bg-red-700 text-white py-2 rounded text-sm font-semibold whitespace-nowrap">
@@ -253,7 +257,7 @@
                                             class="w-1/2 bg-red-600 hover:bg-red-700 text-white py-2 rounded text-sm font-semibold whitespace-nowrap">
                                             Add to Cart
                                         </button>
-                                    @else
+                                    @elseif($product->hasPurchasableBasePrice())
                                         <button 
                                             wire:click="buyNow({{ $product->id }})"
                                             wire:loading.attr="disabled"
@@ -280,6 +284,20 @@
                                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
                                             </span>
+                                        </button>
+                                    @else
+                                        <button
+                                            type="button"
+                                            disabled
+                                            class="w-1/2 bg-red-300 text-white py-2 rounded text-sm font-semibold whitespace-nowrap cursor-not-allowed opacity-60">
+                                            Buy Now
+                                        </button>
+                                        
+                                        <button
+                                            type="button"
+                                            disabled
+                                            class="w-1/2 bg-red-300 text-white py-2 rounded text-sm font-semibold whitespace-nowrap cursor-not-allowed opacity-60">
+                                            Add to Cart
                                         </button>
                                     @endif
                                 </div>
@@ -310,7 +328,7 @@
                                     Choose your option for {{ $selectedProduct->name }}
                                 </h3>
                                 <div class="mt-2">
-                                    @foreach($selectedProduct->priceAttributes as $attribute)
+                                    @foreach($selectedProduct->validPriceAttributes() as $attribute)
                                         <label class="flex items-center justify-between p-4 border border-gray-300 rounded-lg cursor-pointer transition-colors duration-200"
                                                :class="{ 'border-red-500 ring-2 ring-red-500 bg-red-50': $wire.selectedAttributeId == {{ $attribute->id }} }">
                                             <input type="radio" 

@@ -246,11 +246,11 @@
 
               <!-- Pricing Section -->
 
-              @if($product->priceAttributes->isNotEmpty())
+              @if($product->hasPurchasablePriceAttributes())
                 <div class="mt-4">
                     <h4 class="text-gray-700 font-medium mb-2">Available Options:</h4>
                     <div class="grid grid-cols-2 gap-4">
-                        @foreach($product->priceAttributes as $attribute)
+                        @foreach($product->validPriceAttributes() as $attribute)
                             <label class="block border rounded-lg p-4 cursor-pointer transition-colors duration-200"
                                 wire:key="attribute-{{ $attribute->id }}"
                                 :class="{ 'border-red-500 ring-2 ring-red-500 bg-red-50': $wire.selectedAttributeId == {{ $attribute->id }} }">
@@ -273,7 +273,7 @@
                       <p class="mt-2 text-sm text-red-600 font-medium">Please choose one option</p>
                     @endif
                 </div>
-              @else
+              @elseif($product->hasPurchasableBasePrice())
                 <div class="mt-4">
                   <p class="text-base font-medium text-gray-800">
                     MRP <span class="line-through text-gray-500">₹{{ $product->mrp }}</span> /-
@@ -287,6 +287,10 @@
                     <span class="text-sm text-gray-600">({{ $product->shop_description }})</span>
                     @endif
                   </p>
+                </div>
+              @else
+                <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+                  This product currently has no purchasable price.
                 </div>
               @endif
 
@@ -311,7 +315,11 @@
                     <button class="w-10 h-10 text-gray-600 hover:text-black" wire:click="incrementQuantity">+</button>
                   </div>
                 </div>
-                <button wire:click="addToCart" class="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded mt-6">
+                <button
+                  wire:click="addToCart"
+                  wire:loading.attr="disabled"
+                  class="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded mt-6 disabled:opacity-60 disabled:cursor-not-allowed">
+                  @if(! $product->hasPurchasablePricing()) disabled @endif
                   <span wire:loading.remove wire:target="addToCart">Add to Cart</span>
                   <span wire:loading wire:target="addToCart">Adding..</span>
                 </button>

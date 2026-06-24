@@ -2,61 +2,66 @@
 
 namespace App\Livewire\Products;
 
-use Livewire\Component;
-use App\Models\Category;
 use App\Models\Product;
-use App\Services\CategoryService;
-use Livewire\Attributes\Computed;
 use Darryldecode\Cart\Facades\CartFacade as Cart;
+use Livewire\Component;
 
 class PublicDetailsComponent extends Component
 {
     public $type;
+
     public $categorySlug;
+
     public $productSlug;
+
     public $product;
+
     public $quantity = 1;
 
     public $selectedAttributeId;
+
     public $selectedAttribute;
+
     public $attributePriceError = false;
 
-    public function mount($type, $categorySlug, $productSlug){
+    public function mount($type, $categorySlug, $productSlug)
+    {
         $this->type = $type;
         $this->categorySlug = $categorySlug;
         $this->productSlug = $productSlug;
         $this->loadProductdetails();
     }
 
-    public function loadProductdetails(){
+    public function loadProductdetails()
+    {
         $this->product = Product::with([
-                        'priceAttributes',
-                        'category',
-                        'productimages' => function ($query) {
-                            $query->where('status', 0)
-                                ->orderBy('order_no');
-                        },
-                        'combinations.productkeyfeatures' => function ($query) {
-                            $query->where('status', 0)
-                                ->orderBy('order_no');
-                        },
-                        'combinations.productmountinginfos' => function ($query) {
-                            $query->where('status', 0)
-                                ->orderBy('order_no');
-                        },
-                        'combinations.productspecifications' => function ($query) {
-                            $query->where('status', 0)
-                                ->orderBy('order_no');
-                        },
-                        'combinations.producttsparameters' => function ($query) {
-                            $query->where('status', 0)
-                                ->orderBy('order_no');
-                        },
-                        'combinations.productreconkits' => function ($query) {
-                            $query->where('status', 0)
-                                ->orderBy('order_no');
-                        },
-                    ])->where('slug', $this->productSlug)->first();
+            'priceAttributes',
+            'category',
+            'productimages' => function ($query) {
+                $query->where('status', 0)
+                    ->orderBy('order_no');
+            },
+            'combinations.productkeyfeatures' => function ($query) {
+                $query->where('status', 0)
+                    ->orderBy('order_no');
+            },
+            'combinations.productmountinginfos' => function ($query) {
+                $query->where('status', 0)
+                    ->orderBy('order_no');
+            },
+            'combinations.productspecifications' => function ($query) {
+                $query->where('status', 0)
+                    ->orderBy('order_no');
+            },
+            'combinations.producttsparameters' => function ($query) {
+                $query->where('status', 0)
+                    ->orderBy('order_no');
+            },
+            'combinations.productreconkits' => function ($query) {
+                $query->where('status', 0)
+                    ->orderBy('order_no');
+            },
+        ])->where('slug', $this->productSlug)->first();
     }
 
     public function incrementQuantity()
@@ -77,36 +82,38 @@ class PublicDetailsComponent extends Component
 
             $this->attributePriceError = false;
 
-            if ($this->product->priceAttributes->isNotEmpty() && !$this->selectedAttributeId) {
+            if (! $this->product) {
+                throw new \RuntimeException('Product not found.');
+            }
+
+            if ($this->product->hasPurchasablePriceAttributes() && ! $this->selectedAttributeId) {
                 $this->attributePriceError = true;
+
                 return;
             }
 
+            $priceSelection = $this->product->resolvePurchasablePrice($this->selectedAttributeId ? (int) $this->selectedAttributeId : null);
 
             // Get the product details and image
-            //$productimg = $this->product->productimages->first();
             $productimg = $this->product->primaryImage;
-            $productImgpath = $productimg ? env('IMG_HOST') . '/uploads/' . $productimg->path : asset('image/buy.jpg');
+            $productImgpath = $productimg ? env('IMG_HOST').'/uploads/'.$productimg->path : asset('image/buy.jpg');
 
-            // Use selected attribute details if available, otherwise use product's default
             $name = $this->product->name;
-            $mrp = $this->product->mrp;
-            $price = $this->product->price;
+            $mrp = $priceSelection['mrp'];
+            $price = $priceSelection['price'];
             $cartId = $this->product->id;
             $shopDescription = $this->product->shop_description ?? null;
-            $attributeName = null;
+            $attributeName = $priceSelection['attribute_name'];
+            $this->selectedAttribute = null;
 
             if ($this->selectedAttributeId) {
-                $this->selectedAttribute = $this->product->priceAttributes->firstWhere('id', $this->selectedAttributeId);
+                $this->selectedAttribute = $this->product->validPriceAttributes()->firstWhere('id', $this->selectedAttributeId);
 
-                if($this->selectedAttribute){
-                    $name = $this->product->name . ' (' . $this->selectedAttribute->name . ')';
-                    $mrp = $this->selectedAttribute->mrp;
-                    $price = $this->selectedAttribute->price;
-                    $cartId = $this->product->id . '-' . $this->selectedAttribute->id;
+                if ($this->selectedAttribute) {
+                    $name = $this->product->name.' ('.$this->selectedAttribute->name.')';
+                    $cartId = $this->product->id.'-'.$this->selectedAttribute->id;
                     $attributeName = $this->selectedAttribute->name;
                 }
-                
             }
 
             Cart::add([
@@ -119,7 +126,7 @@ class PublicDetailsComponent extends Component
                     'image' => $productImgpath,
                     'shop_description' => $shopDescription,
                     'attribute_name' => $attributeName, // Save the attribute name to the cart
-                ]
+                ],
             ]);
 
             if ($this->selectedAttribute) {
@@ -130,10 +137,10 @@ class PublicDetailsComponent extends Component
                 ]);
             }
 
-            $this->dispatch('alert', message: $name . ' added to cart!');
+            $this->dispatch('alert', message: $name.' added to cart!');
 
         } catch (\Exception $e) {
-            $this->dispatch('alert', message: 'Error adding product to cart: ' . $e->getMessage());
+            $this->dispatch('alert', message: 'Error adding product to cart: '.$e->getMessage());
         }
 
         // Refresh cart related data
