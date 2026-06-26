@@ -99,6 +99,8 @@
 
                 @if($order->shipping_same_as_billing)
                     <p class="text-sm text-gray-700 leading-relaxed">
+                        {{ $order->billing_name }}<br>
+                        {{ $order->billing_email }} - {{ $order->billing_phone }}<br>
                         {{ $order->billing_street }}<br>
                         {{ $order->billing_locality }}<br>
                         {{ $order->billing_city }}, {{ $order->billing_state }} - {{ $order->billing_zip }}<br>
@@ -108,6 +110,8 @@
                     </p>
                 @else
                     <p class="text-sm text-gray-700 leading-relaxed">
+                        {{ $order->shipping_name }}<br>
+                        {{ $order->shipping_email }} - {{ $order->shipping_phone }}<br>
                         {{ $order->shipping_street }}<br>
                         {{ $order->shipping_locality }}<br>
                         {{ $order->shipping_city }}, {{ $order->shipping_state }} - {{ $order->shipping_zip }}<br>
