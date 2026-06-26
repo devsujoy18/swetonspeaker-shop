@@ -70,6 +70,9 @@
                                 <x-dropdown-link :href="route('admin.orders.ledger')" :active="request()->routeIs('admin.orders.ledger*')">
                                     {{ __('Account & Ledger') }}
                                 </x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.orders.product-analytics')" :active="request()->routeIs('admin.orders.product-analytics')">
+                                    {{ __('Product Analytics') }}
+                                </x-dropdown-link>
                                 <x-dropdown-link :href="route('admin.orders.report.success')" :active="request()->routeIs('admin.orders.report.success')">
                                     {{ __('Order success report') }}
                                 </x-dropdown-link>
@@ -133,6 +136,9 @@
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('admin.orders.ledger')" :active="request()->routeIs('admin.orders.ledger*')">
                                     {{ __('Account & Ledger') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.orders.product-analytics')" :active="request()->routeIs('admin.orders.product-analytics')">
+                                    {{ __('Product Analytics') }}
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('admin.orders.report.success')" :active="request()->routeIs('admin.orders.report.success')">
                                     {{ __('Order success report') }}
@@ -249,6 +255,9 @@
             <x-responsive-nav-link :href="route('admin.orders.ledger')" :active="request()->routeIs('admin.orders.ledger*')" class="pl-8">
                 {{ __('Account & Ledger') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('admin.orders.product-analytics')" :active="request()->routeIs('admin.orders.product-analytics')" class="pl-8">
+                {{ __('Product Analytics') }}
+            </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('admin.orders.report.success')" :active="request()->routeIs('admin.orders.report.success')" class="pl-8">
                 {{ __('Order success report') }}
             </x-responsive-nav-link>
@@ -306,6 +315,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('admin.orders.ledger')" :active="request()->routeIs('admin.orders.ledger*')" class="pl-8">
                 {{ __('Account & Ledger') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('admin.orders.product-analytics')" :active="request()->routeIs('admin.orders.product-analytics')" class="pl-8">
+                {{ __('Product Analytics') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('admin.orders.report.success')" :active="request()->routeIs('admin.orders.report.success')" class="pl-8">
                 {{ __('Order success report') }}

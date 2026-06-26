@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Exports\ReportExport;
 use App\Exports\SuccessOrderExport;
 use App\Http\Requests\AccountLedgerRequest;
+use App\Http\Requests\ProductAnalyticsRequest;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -67,6 +69,78 @@ class ReportController extends Controller
         ]);
     }
 
+    public function productAnalytics(ProductAnalyticsRequest $request)
+    {
+        abort_unless(auth()->user()?->can('isAdmin') || auth()->user()?->can('isSubadmin'), 403);
+
+        $filters = $request->validated();
+        $fromDate = $filters['from_date'] ?? null;
+        $toDate = $filters['to_date'] ?? null;
+        $baseQuery = $this->productAnalyticsBaseQuery($fromDate, $toDate);
+
+        $productReports = (clone $baseQuery)
+            ->selectRaw('order_items.product_id')
+            ->selectRaw('order_items.price_attribute_id')
+            ->selectRaw("COALESCE(products.name, NULLIF(order_items.product_name, ''), 'Deleted product') as product_name")
+            ->selectRaw('product_price_attributes.name as attribute_name')
+            ->selectRaw("SUM(CASE WHEN orders.payment_status = 'success' AND orders.order_status != 'cancelled' THEN COALESCE(order_items.quantity, 0) ELSE 0 END) as quantity_sold")
+            ->selectRaw("SUM(CASE WHEN orders.payment_status = 'success' AND orders.order_status != 'cancelled' THEN COALESCE(order_items.total, 0) ELSE 0 END) as total_sales")
+            ->selectRaw("COUNT(DISTINCT CASE WHEN orders.payment_status = 'success' AND orders.order_status != 'cancelled' THEN orders.id END) as orders_count")
+            ->selectRaw("SUM(CASE WHEN orders.payment_status = 'refunded' THEN COALESCE(order_items.quantity, 0) ELSE 0 END) as refunded_quantity")
+            ->groupBy('order_items.product_id', 'order_items.price_attribute_id', 'order_items.product_name', 'products.name', 'product_price_attributes.name')
+            ->havingRaw("SUM(CASE WHEN orders.payment_status = 'success' AND orders.order_status != 'cancelled' THEN COALESCE(order_items.quantity, 0) ELSE 0 END) > 0 OR SUM(CASE WHEN orders.payment_status = 'refunded' THEN COALESCE(order_items.quantity, 0) ELSE 0 END) > 0")
+            ->orderByDesc('quantity_sold')
+            ->orderByDesc('total_sales')
+            ->get();
+
+        $dailyReports = (clone $baseQuery)
+            ->selectRaw('DATE(orders.order_date) as sold_on')
+            ->selectRaw("SUM(CASE WHEN orders.payment_status = 'success' AND orders.order_status != 'cancelled' THEN COALESCE(order_items.quantity, 0) ELSE 0 END) as quantity_sold")
+            ->selectRaw("SUM(CASE WHEN orders.payment_status = 'success' AND orders.order_status != 'cancelled' THEN COALESCE(order_items.total, 0) ELSE 0 END) as total_sales")
+            ->selectRaw("COUNT(DISTINCT CASE WHEN orders.payment_status = 'success' AND orders.order_status != 'cancelled' THEN orders.id END) as orders_count")
+            ->selectRaw("SUM(CASE WHEN orders.payment_status = 'refunded' THEN COALESCE(order_items.quantity, 0) ELSE 0 END) as refunded_quantity")
+            ->groupByRaw('DATE(orders.order_date)')
+            ->orderByDesc('sold_on')
+            ->get();
+
+        $topProductsByDate = (clone $baseQuery)
+            ->where('orders.payment_status', 'success')
+            ->where('orders.order_status', '!=', 'cancelled')
+            ->selectRaw('DATE(orders.order_date) as sold_on')
+            ->selectRaw('order_items.price_attribute_id')
+            ->selectRaw("COALESCE(products.name, NULLIF(order_items.product_name, ''), 'Deleted product') as product_name")
+            ->selectRaw('product_price_attributes.name as attribute_name')
+            ->selectRaw('SUM(COALESCE(order_items.quantity, 0)) as quantity_sold')
+            ->groupByRaw('DATE(orders.order_date)')
+            ->groupBy('order_items.product_id', 'order_items.price_attribute_id', 'order_items.product_name', 'products.name', 'product_price_attributes.name')
+            ->get()
+            ->groupBy('sold_on')
+            ->map(fn ($rows) => $rows->sortByDesc('quantity_sold')->first());
+
+        $totalQuantitySold = (int) $productReports->sum(fn ($report) => (int) $report->quantity_sold);
+        $totalProductSales = (float) $productReports->sum(fn ($report) => (float) $report->total_sales);
+        $refundedQuantity = (int) $productReports->sum(fn ($report) => (int) $report->refunded_quantity);
+        $topProduct = $productReports->first(fn ($report) => (int) $report->quantity_sold > 0);
+
+        return view('report.product_analytics', [
+            'productReports' => $productReports,
+            'dailyReports' => $dailyReports,
+            'topProductsByDate' => $topProductsByDate,
+            'summary' => [
+                'active_products' => $productReports->filter(fn ($report) => (int) $report->quantity_sold > 0)->count(),
+                'quantity_sold' => $totalQuantitySold,
+                'refunded_quantity' => $refundedQuantity,
+                'total_sales' => $totalProductSales,
+                'average_unit_price' => $totalQuantitySold > 0 ? $totalProductSales / $totalQuantitySold : 0,
+                'top_product_name' => $this->productAnalyticsDisplayName($topProduct),
+                'top_product_quantity' => $topProduct ? (int) $topProduct->quantity_sold : 0,
+            ],
+            'periodLabel' => $this->ledgerPeriodLabel($fromDate, $toDate),
+            'maxProductQuantity' => max(1, (int) $productReports->max('quantity_sold')),
+            'maxDailyQuantity' => max(1, (int) $dailyReports->max('quantity_sold')),
+        ]);
+    }
+
     public function export(Request $request)
     {
         $request->validate([
@@ -118,6 +192,48 @@ class ReportController extends Controller
 
         if ($toDate) {
             $query->where('order_date', '<=', Carbon::parse($toDate)->endOfDay());
+        }
+    }
+
+    private function productAnalyticsBaseQuery(?string $fromDate, ?string $toDate): Builder
+    {
+        $query = OrderItem::query()
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->leftJoin('products', 'order_items.product_id', '=', 'products.id')
+            ->leftJoin('product_price_attributes', 'order_items.price_attribute_id', '=', 'product_price_attributes.id')
+            ->where(function (Builder $query): void {
+                $query->where(function (Builder $query): void {
+                    $query->where('orders.payment_status', 'success')
+                        ->where('orders.order_status', '!=', 'cancelled');
+                })->orWhere('orders.payment_status', 'refunded');
+            });
+
+        $this->applyProductAnalyticsDateFilters($query, $fromDate, $toDate);
+
+        return $query;
+    }
+
+    private function productAnalyticsDisplayName(?object $report): ?string
+    {
+        if (! $report) {
+            return null;
+        }
+
+        if (blank($report->attribute_name)) {
+            return $report->product_name;
+        }
+
+        return $report->product_name.' - '.$report->attribute_name;
+    }
+
+    private function applyProductAnalyticsDateFilters(Builder $query, ?string $fromDate, ?string $toDate): void
+    {
+        if ($fromDate) {
+            $query->where('orders.order_date', '>=', Carbon::parse($fromDate)->startOfDay());
+        }
+
+        if ($toDate) {
+            $query->where('orders.order_date', '<=', Carbon::parse($toDate)->endOfDay());
         }
     }
 

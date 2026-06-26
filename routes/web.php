@@ -97,6 +97,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('orders', [OrderController::class, 'allOrders'])->name('admin.orders.index');
         Route::get('orders/account-ledger', [ReportController::class, 'accountLedger'])->name('admin.orders.ledger');
+        Route::get('orders/product-analytics', [ReportController::class, 'productAnalytics'])->name('admin.orders.product-analytics');
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
         Route::get('/orders/{order}', [OrderController::class, 'showDetails'])->name('admin.orders.show');
         Route::get('users', [UserController::class, 'index'])->name('admin.users.index');
