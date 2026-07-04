@@ -228,6 +228,9 @@
             <x-responsive-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.*')">
                 {{ __('My Orders') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('old.orders')" :active="request()->routeIs('old.orders')">
+                {{ __('Old Orders') }}
+            </x-responsive-nav-link>
             @endcan
 
 
