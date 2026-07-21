@@ -106,7 +106,8 @@ test('cart page validates attribute cart item ids with one product lookup', func
     ]);
 
     Livewire::test(DetailsComponent::class)
-        ->assertHasNoErrors();
+        ->assertHasNoErrors()
+        ->assertSee('Updating');
 
     expect(Cart::getContent()->keys()->all())
         ->toContain($product->id.'-99')

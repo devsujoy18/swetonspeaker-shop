@@ -13,7 +13,14 @@
             <!-- Card for a single cart item -->
             {{-- Loop through cart items --}}
                             @forelse ($cartItems as $item)
-            <div class="bg-white p-5 rounded-xl shadow-lg relative border border-gray-100">
+            <div
+                wire:key="mobile-cart-item-{{ $item->id }}-{{ $item->quantity }}"
+                class="bg-white p-5 rounded-xl shadow-lg relative border border-gray-100"
+                x-data="{ quantityUpdating: null }"
+                x-on:livewire:navigated.window="quantityUpdating = null"
+                x-on:livewire:update.window="quantityUpdating = null"
+                x-on:livewire:updated.window="quantityUpdating = null"
+            >
 
                 <!-- Close Button (X) - Trigger Modal -->
                 <!--<button onclick="showDeleteModal('10')" class="absolute top-3 right-3 text-red-400 hover:text-red-500 text-2xl transition duration-150 rounded-full p-1 leading-none">&times;</button>-->
@@ -47,30 +54,32 @@
                         <!-- Quantity Selector (Adjusted slightly for mobile design) -->
                         <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                             <button 
-                                                wire:click="decrementQuantity('{{ $item->id }}')" 
-                                                wire:loading.attr="disabled"
-                                                wire:target="decrementQuantity({{ $item->id }})"
-                                                class="px-3 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-                                                @if($item->quantity <= 1) disabled @endif
-                                            >
-                                                -
-                                            </button>
+                                @click="quantityUpdating = 'decrement'; $wire.decrementQuantity('{{ $item->id }}').then(() => quantityUpdating = null, () => quantityUpdating = null)"
+                                x-bind:disabled="quantityUpdating !== null || {{ $item->quantity <= 1 ? 'true' : 'false' }}"
+                                class="flex h-8 w-9 items-center justify-center text-gray-600 hover:bg-gray-100 disabled:cursor-wait disabled:opacity-50"
+                                @if($item->quantity <= 1) disabled @endif
+                            >
+                                <span x-show="quantityUpdating !== 'decrement'">-</span>
+                                <span x-cloak x-show="quantityUpdating === 'decrement'" class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"></span>
+                            </button>
                                             
-                                            <span class="px-4 py-1 border-x border-gray-300">
-                                                <span>
-                                                    {{ $item->quantity }}
-                                                </span>
-                                                
-                                            </span>
+                            <span class="flex h-8 min-w-12 items-center justify-center border-x border-gray-300 px-3">
+                                <span x-show="quantityUpdating === null">
+                                    {{ $item->quantity }}
+                                </span>
+                                <span x-cloak x-show="quantityUpdating !== null" class="text-xs font-medium text-red-600">
+                                    Updating
+                                </span>
+                            </span>
                                             
-                                            <button 
-                                                wire:click="incrementQuantity('{{ $item->id }}')" 
-                                                wire:loading.attr="disabled"
-                                                wire:target="incrementQuantity({{ $item->id }})"
-                                                class="px-3 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-                                            >
-                                                +
-                                            </button>
+                            <button 
+                                @click="quantityUpdating = 'increment'; $wire.incrementQuantity('{{ $item->id }}').then(() => quantityUpdating = null, () => quantityUpdating = null)"
+                                x-bind:disabled="quantityUpdating !== null"
+                                class="flex h-8 w-9 items-center justify-center text-gray-600 hover:bg-gray-100 disabled:cursor-wait disabled:opacity-50"
+                            >
+                                <span x-show="quantityUpdating !== 'increment'">+</span>
+                                <span x-cloak x-show="quantityUpdating === 'increment'" class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"></span>
+                            </button>
                         </div>
                     </div>
 
@@ -124,7 +133,13 @@
                         <tbody class="divide-y divide-gray-200">
                             {{-- Loop through cart items --}}
                             @forelse ($cartItems as $item)
-                                <tr wire:key="cart-item-{{ $item->id }}">
+                                <tr
+                                    wire:key="cart-item-{{ $item->id }}-{{ $item->quantity }}"
+                                    x-data="{ quantityUpdating: null }"
+                                    x-on:livewire:navigated.window="quantityUpdating = null"
+                                    x-on:livewire:update.window="quantityUpdating = null"
+                                    x-on:livewire:updated.window="quantityUpdating = null"
+                                >
                                     <td class="px-6 py-4">
                                         <div class="relative">
                                             <img src="{{ $item->attributes->image }}" alt="{{ $item->name }}" class="w-20 h-20 object-contain">
@@ -143,31 +158,33 @@
                                     </td>
                                     
                                     <td class="px-6 py-4">
-                                        <div class="flex items-center border border-gray-300 rounded w-[108px]">
+                                        <div class="flex w-[156px] items-center overflow-hidden rounded border border-gray-300">
                                             <button 
-                                                wire:click="decrementQuantity('{{ $item->id }}')" 
-                                                wire:loading.attr="disabled"
-                                                wire:target="decrementQuantity({{ $item->id }})"
-                                                class="px-3 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                                                @click="quantityUpdating = 'decrement'; $wire.decrementQuantity('{{ $item->id }}').then(() => quantityUpdating = null, () => quantityUpdating = null)"
+                                                x-bind:disabled="quantityUpdating !== null || {{ $item->quantity <= 1 ? 'true' : 'false' }}"
+                                                class="flex h-10 w-10 items-center justify-center text-gray-600 hover:bg-gray-100 disabled:cursor-wait disabled:opacity-50"
                                                 @if($item->quantity <= 1) disabled @endif
                                             >
-                                                -
+                                                <span x-show="quantityUpdating !== 'decrement'">-</span>
+                                                <span x-cloak x-show="quantityUpdating === 'decrement'" class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"></span>
                                             </button>
                                             
-                                            <span class="px-4 py-1 border-x border-gray-300">
-                                                <span>
+                                            <span class="flex h-10 min-w-16 items-center justify-center border-x border-gray-300 px-3">
+                                                <span x-show="quantityUpdating === null">
                                                     {{ $item->quantity }}
                                                 </span>
-                                                
+                                                <span x-cloak x-show="quantityUpdating !== null" class="text-xs font-medium text-red-600">
+                                                    Updating
+                                                </span>
                                             </span>
                                             
                                             <button 
-                                                wire:click="incrementQuantity('{{ $item->id }}')" 
-                                                wire:loading.attr="disabled"
-                                                wire:target="incrementQuantity({{ $item->id }})"
-                                                class="px-3 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                                                @click="quantityUpdating = 'increment'; $wire.incrementQuantity('{{ $item->id }}').then(() => quantityUpdating = null, () => quantityUpdating = null)"
+                                                x-bind:disabled="quantityUpdating !== null"
+                                                class="flex h-10 w-10 items-center justify-center text-gray-600 hover:bg-gray-100 disabled:cursor-wait disabled:opacity-50"
                                             >
-                                                +
+                                                <span x-show="quantityUpdating !== 'increment'">+</span>
+                                                <span x-cloak x-show="quantityUpdating === 'increment'" class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"></span>
                                             </button>
                                         </div>
                                     </td>
