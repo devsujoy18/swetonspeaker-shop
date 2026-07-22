@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Category\CategoryProductsComponent;
 use App\Livewire\Products\PublicDetailsComponent;
 use App\Models\Category;
 use App\Models\Product;
@@ -133,4 +134,18 @@ test('product details still adds a valid priced attribute to cart', function ():
     expect(Cart::getContent())->toHaveCount(1)
         ->and($cartItem->name)->toContain($product->name)
         ->and($cartItem->price)->toBe(1499.0);
+});
+
+test('category product list add to cart dispatches client side cart count update', function (): void {
+    [$product, $category] = createProductPricingFixture(995);
+
+    Livewire::test(CategoryProductsComponent::class, [
+        'type' => 'pro-loudspeaker',
+        'categorySlug' => $category->slug,
+    ])
+        ->call('addTocart', $product->id)
+        ->assertHasNoErrors()
+        ->assertDispatched('cart-qty-changed-mobile');
+
+    expect(Cart::getTotalQuantity())->toBe(1);
 });

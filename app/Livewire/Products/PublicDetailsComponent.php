@@ -36,6 +36,7 @@ class PublicDetailsComponent extends Component
     {
         $this->product = Product::with([
             'priceAttributes',
+            'primaryImage',
             'category',
             'productimages' => function ($query) {
                 $query->where('status', 0)
@@ -144,7 +145,6 @@ class PublicDetailsComponent extends Component
         }
 
         // Refresh cart related data
-        $this->dispatch('cart-qty-changed-desktop');
         $this->dispatch('cart-qty-changed-mobile', ['currentQuantity' => Cart::getTotalQuantity()]);
     }
 

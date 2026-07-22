@@ -124,7 +124,6 @@ class DetailsComponent extends Component
     protected function dispatchCartUpdates()
     {
         $currentCartQty = Cart::getTotalQuantity();
-        $this->dispatch('cart-qty-changed-desktop');
         $this->dispatch('cart-qty-changed-mobile', ['currentQuantity' => $currentCartQty]);
     }
 

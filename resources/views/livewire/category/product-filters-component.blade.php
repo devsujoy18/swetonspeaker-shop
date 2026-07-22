@@ -32,7 +32,7 @@
                         @foreach($availableOhms as $ohm)
                             <div class="flex items-center">
                                 <input wire:model="selectedOhms" type="checkbox" id="ohm-{{ $ohm }}" value="{{ $ohm }}" class="mr-2">
-                                <label for="ohm-{{ $ohm }}">{{ $ohm }} Ohm</label>
+                                <label for="ohm-{{ $ohm }}">{!! \App\Models\Productcombination::formattedName($ohm) !!}</label>
                             </div>
                         @endforeach
                     </div>
@@ -69,7 +69,7 @@
                 <select wire:model="selectedOhms" multiple class="custom-select px-5 py-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-500 shadow-sm text-gray-700">
                     <option value="">All Ohms</option>
                     @foreach($availableOhms as $ohm)
-                        <option value="{{ $ohm }}">{{ $ohm }} Ohm</option>
+                        <option value="{{ $ohm }}">{!! \App\Models\Productcombination::formattedName($ohm) !!}</option>
                     @endforeach
                 </select>
             </div>

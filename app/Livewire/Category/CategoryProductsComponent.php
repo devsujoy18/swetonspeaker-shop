@@ -38,8 +38,6 @@ class CategoryProductsComponent extends Component
 
     public $proloudSpeakers;
 
-    public $cartItems;
-
     public $alertMessage = '';
 
     public $showAttributeModal = false;
@@ -57,8 +55,6 @@ class CategoryProductsComponent extends Component
         $this->categorySlug = $categorySlug;
         $this->categoryService = new CategoryService;
         $this->loadCategoryAndProducts();
-
-        $this->cartItems = Cart::getContent();
     }
 
     public function loadCategoryAndProducts()
@@ -178,64 +174,13 @@ class CategoryProductsComponent extends Component
         ]);
     }
 
-    /*public function addTocart($productId){
-
-        try {
-            $product = Product::findOrFail($productId);
-            if($product){
-                $productimg = $product->productimages->first();
-                if($productimg){
-                    $productImgpath = env('IMG_HOST').'uploads/'.$productimg->path;
-                }else{
-                    $productImgpath = asset('image/buy.jpg');
-                }
-
-
-                Cart::add([
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'price' => $product->price,
-                    'quantity' => 1,
-                    'attributes' => [
-                        'mrp' => $product->mrp,
-                        'image' => $productImgpath,
-                        'shop_description' => $product->shop_description ?? null
-                    ]
-                ]);
-
-                // Dispatch success message
-                // $this->dispatch('show-toast-message', [
-                //     'message' => $product->name . ' added to cart!',
-                //     'type' => 'success'
-                // ]);
-
-                $this->alertMessage = $product->name . ' added to cart!';
-                $this->dispatch('alert', message: $this->alertMessage);
-            }
-        } catch (\Exception $e) {
-            // $this->dispatch('show-toast-message', [
-            //     'message' => 'Error adding product to cart: ' . $e->getMessage(),
-            //     'type' => 'error'
-            // ]);
-            $this->alertMessage = 'Error adding product to cart: ' . $e->getMessage();
-            $this->dispatch('alert', message: $this->alertMessage);
-           // \Log::error('Error adding product to cart: ' . $e->getMessage(), ['productId' => $productId]);
-        }
-
-        $this->cartItems = Cart::getContent();
-        $currentCartQty = Cart::getTotalQuantity();
-        $this->dispatch('cart-qty-changed-desktop');
-        $this->dispatch('cart-qty-changed-mobile', ['currentQuantity' => $currentCartQty]);
-    }
-    */
-
     /**
      * Add to cart with attributes
      */
     public function addTocart($productId, $priceAttributeId = null)
     {
         try {
-            $product = Product::with('priceAttributes')->find($productId);
+            $product = Product::with(['priceAttributes', 'primaryImage'])->find($productId);
             if (! $product) {
                 throw new \RuntimeException('Product not found.');
             }
@@ -282,9 +227,7 @@ class CategoryProductsComponent extends Component
             $this->dispatch('alert', message: $this->alertMessage);
         }
 
-        $this->cartItems = Cart::getContent();
         $currentCartQty = Cart::getTotalQuantity();
-        $this->dispatch('cart-qty-changed-desktop');
         $this->dispatch('cart-qty-changed-mobile', ['currentQuantity' => $currentCartQty]);
     }
 
@@ -292,14 +235,14 @@ class CategoryProductsComponent extends Component
     public function buyNow($productId, $priceAttributeId = null)
     {
         try {
-            $product = Product::with('priceAttributes')->find($productId);
+            $product = Product::with(['priceAttributes', 'primaryImage'])->find($productId);
             if (! $product) {
                 throw new \RuntimeException('Product not found.');
             }
 
             $priceSelection = $product->resolvePurchasablePrice($priceAttributeId);
 
-            $productimg = $product->productimages->first();
+            $productimg = $product->primaryImage;
             if ($productimg) {
                 $productImgpath = env('IMG_HOST').'uploads/'.$productimg->path;
             } else {
@@ -339,9 +282,7 @@ class CategoryProductsComponent extends Component
             $this->dispatch('alert', message: $this->alertMessage);
         }
 
-        $this->cartItems = Cart::getContent();
         $currentCartQty = Cart::getTotalQuantity();
-        $this->dispatch('cart-qty-changed-desktop');
         $this->dispatch('cart-qty-changed-mobile', ['currentQuantity' => $currentCartQty]);
 
         return redirect()->route('cart')->with('message', $this->alertMessage.'. Please proceed to buy');

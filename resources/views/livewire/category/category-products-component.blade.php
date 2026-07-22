@@ -124,7 +124,7 @@
                         <select class="px-4 py-2 border border-red-500 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-red-500 text-sm text-gray-700" wire:model.live="selectedOhms">
                             <option>All Ohms</option>
                             @foreach($availableOhms as $ohm)
-                            <option value="{{ $ohm }}">{{ $ohm }}</option>
+                            <option value="{{ $ohm }}">{!! \App\Models\Productcombination::formattedName($ohm) !!}</option>
                             @endforeach
                         </select>
 
@@ -152,7 +152,7 @@
                       <select class="custom-select px-5 py-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-500 shadow-sm text-gray-700" wire:model.live="selectedOhms">
                         <option>All Ohms</option>
                         @foreach($availableOhms as $ohm)
-                        <option value="{{ $ohm }}">{{ $ohm }}</option>
+                        <option value="{{ $ohm }}">{!! \App\Models\Productcombination::formattedName($ohm) !!}</option>
                         @endforeach
                       </select>
                     </div>
@@ -185,6 +185,10 @@
                         <?php
                             //$productimg = $product->productimages->first();
                             $productimg = $product->primaryImage;
+                            $combinationNames = $product->combinations
+                                ->map(fn ($combination) => (string) \App\Models\Productcombination::formattedName($combination->name))
+                                ->filter()
+                                ->join(', ');
                         ?>
                         <!-- Product Card -->
                         <div class="border-2 border-black-500 hover:border-red-500 hover:shadow-2xl transition duration-300 rounded p-4 relative" 
@@ -216,7 +220,9 @@
                             </div>
                             <div class="mt-2 text-center">
                                 <h3 class="text-lg font-semibold">{{ $product->name }}</h3>
-                                <p class="text-sm text-gray-600">( {{ $product->combinations->pluck('name')->join(', ') }} )</p>
+                                @if($combinationNames)
+                                    <p class="text-sm text-gray-600">( {!! $combinationNames !!} )</p>
+                                @endif
                             </div>
 
                             <div class="mt-2 flex flex-col items-center">

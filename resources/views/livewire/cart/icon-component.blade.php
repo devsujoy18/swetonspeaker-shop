@@ -1,4 +1,8 @@
-<div class="relative">
+<div
+  class="relative"
+  x-data="{ cartCount: {{ $cartCount }} }"
+  x-on:cart-qty-changed-mobile.window="cartCount = $event.detail[0].currentQuantity"
+>
   <!-- Cart Button -->
   <button 
     id="cart-button" 
@@ -9,7 +13,7 @@
       id="cart_widget_count" 
       class="absolute -top-1 -right-2 bg-red-600 text-white text-xs rounded-full px-1"
     >
-      {{ $cartCount }}
+      <span x-text="cartCount">{{ $cartCount }}</span>
     </span>
   </button>
 

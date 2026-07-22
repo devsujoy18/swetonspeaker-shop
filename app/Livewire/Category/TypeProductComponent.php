@@ -36,8 +36,6 @@ class TypeProductComponent extends Component
 
     public $proloudSpeakers;
 
-    public $cartItems;
-
     public $alertMessage = '';
 
     public $showAttributeModal = false;
@@ -207,7 +205,7 @@ class TypeProductComponent extends Component
     public function addTocart($productId, $priceAttributeId = null)
     {
         try {
-            $product = Product::with('priceAttributes')->find($productId);
+            $product = Product::with(['priceAttributes', 'primaryImage'])->find($productId);
             if (! $product) {
                 throw new \RuntimeException('Product not found.');
             }
@@ -254,9 +252,7 @@ class TypeProductComponent extends Component
             $this->dispatch('alert', message: $this->alertMessage);
         }
 
-        $this->cartItems = Cart::getContent();
         $currentCartQty = Cart::getTotalQuantity();
-        $this->dispatch('cart-qty-changed-desktop');
         $this->dispatch('cart-qty-changed-mobile', ['currentQuantity' => $currentCartQty]);
     }
 
@@ -264,14 +260,14 @@ class TypeProductComponent extends Component
     public function buyNow($productId, $priceAttributeId = null)
     {
         try {
-            $product = Product::with('priceAttributes')->find($productId);
+            $product = Product::with(['priceAttributes', 'primaryImage'])->find($productId);
             if (! $product) {
                 throw new \RuntimeException('Product not found.');
             }
 
             $priceSelection = $product->resolvePurchasablePrice($priceAttributeId);
 
-            $productimg = $product->productimages->first();
+            $productimg = $product->primaryImage;
             if ($productimg) {
                 $productImgpath = env('IMG_HOST').'uploads/'.$productimg->path;
             } else {
@@ -311,9 +307,7 @@ class TypeProductComponent extends Component
             $this->dispatch('alert', message: $this->alertMessage);
         }
 
-        $this->cartItems = Cart::getContent();
         $currentCartQty = Cart::getTotalQuantity();
-        $this->dispatch('cart-qty-changed-desktop');
         $this->dispatch('cart-qty-changed-mobile', ['currentQuantity' => $currentCartQty]);
 
         return redirect()->route('cart')->with('message', $this->alertMessage.'. Please proceed to buy');
