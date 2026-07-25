@@ -16,6 +16,7 @@
       <span x-text="cartCount">{{ $cartCount }}</span>
     </span>
   </button>
+  
 
   <div
     id="cart-dropdown"
