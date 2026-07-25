@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Category;
 
+use App\Livewire\Cart\IconComponent;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\CategoryService;
@@ -254,6 +255,7 @@ class TypeProductComponent extends Component
 
         $currentCartQty = Cart::getTotalQuantity();
         $this->dispatch('cart-qty-changed-mobile', currentQuantity: $currentCartQty);
+        $this->dispatch('cart-preview-refresh')->to(IconComponent::class);
     }
 
     // Buy Now
@@ -309,6 +311,7 @@ class TypeProductComponent extends Component
 
         $currentCartQty = Cart::getTotalQuantity();
         $this->dispatch('cart-qty-changed-mobile', currentQuantity: $currentCartQty);
+        $this->dispatch('cart-preview-refresh')->to(IconComponent::class);
 
         return redirect()->route('cart')->with('message', $this->alertMessage.'. Please proceed to buy');
     }

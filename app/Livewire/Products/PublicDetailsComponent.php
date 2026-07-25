@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Products;
 
+use App\Livewire\Cart\IconComponent;
 use App\Models\Product;
 use Darryldecode\Cart\Facades\CartFacade as Cart;
 use Livewire\Component;
@@ -146,6 +147,7 @@ class PublicDetailsComponent extends Component
 
         // Refresh cart related data
         $this->dispatch('cart-qty-changed-mobile', currentQuantity: Cart::getTotalQuantity());
+        $this->dispatch('cart-preview-refresh')->to(IconComponent::class);
     }
 
     public function render()

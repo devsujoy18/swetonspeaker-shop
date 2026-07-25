@@ -132,7 +132,8 @@ test('product details still adds a valid priced attribute to cart', function ():
         ->assertHasNoErrors()
         ->assertDispatched('cart-qty-changed-mobile', function (string $event, array $params): bool {
             return $params['currentQuantity'] === 1;
-        });
+        })
+        ->assertDispatchedTo(IconComponent::class, 'cart-preview-refresh');
 
     $cartItem = Cart::getContent()->first();
 
@@ -152,7 +153,8 @@ test('category product list add to cart dispatches client side cart count update
         ->assertHasNoErrors()
         ->assertDispatched('cart-qty-changed-mobile', function (string $event, array $params): bool {
             return $params['currentQuantity'] === 1;
-        });
+        })
+        ->assertDispatchedTo(IconComponent::class, 'cart-preview-refresh');
 
     expect(Cart::getTotalQuantity())->toBe(1);
 });
@@ -171,7 +173,8 @@ test('category attribute modal add to cart dispatches the updated cart count', f
         ->assertHasNoErrors()
         ->assertDispatched('cart-qty-changed-mobile', function (string $event, array $params): bool {
             return $params['currentQuantity'] === 1;
-        });
+        })
+        ->assertDispatchedTo(IconComponent::class, 'cart-preview-refresh');
 
     expect(Cart::getTotalQuantity())->toBe(1);
 });
@@ -186,7 +189,8 @@ test('type product list add to cart dispatches the updated cart count', function
         ->assertHasNoErrors()
         ->assertDispatched('cart-qty-changed-mobile', function (string $event, array $params): bool {
             return $params['currentQuantity'] === 1;
-        });
+        })
+        ->assertDispatchedTo(IconComponent::class, 'cart-preview-refresh');
 
     expect(Cart::getTotalQuantity())->toBe(1);
 });
@@ -213,14 +217,15 @@ test('cart icon refreshes dropdown contents after cart quantity update event', f
     ]);
 
     $cartIcon
-        ->dispatch('cart-qty-changed-mobile', currentQuantity: Cart::getTotalQuantity())
+        ->dispatch('cart-preview-refresh')
         ->assertSee($product->name)
         ->assertDontSee('Your cart is empty.');
 });
 
-test('cart icon renders multiple cart items with prices and quantities', function (): void {
+test('cart icon renders all current cart items after being refreshed', function (): void {
     [$firstProduct] = createProductPricingFixture(1070);
     [$secondProduct] = createProductPricingFixture(1700);
+    [$thirdProduct] = createProductPricingFixture(735);
 
     Cart::add([
         'id' => $firstProduct->id,
@@ -241,20 +246,42 @@ test('cart icon renders multiple cart items with prices and quantities', functio
         'id' => $secondProduct->id,
         'name' => $secondProduct->name.' (Set of 2 Pieces)',
         'price' => 1700,
-        'quantity' => 2,
+        'quantity' => 1,
         'attributes' => [
             'mrp' => 1750,
             'image' => asset('image/buy.jpg'),
-            'shop_description' => 'Set of 2 pieces',
+            'shop_description' => 'Set of 2 Pieces',
             'product_id' => $secondProduct->id,
             'price_attribute_id' => null,
             'attribute_name' => null,
         ],
     ]);
 
-    Livewire::test(IconComponent::class)
+    $cartIcon = Livewire::test(IconComponent::class)
         ->assertSee($firstProduct->name)
         ->assertSee($secondProduct->name)
+        ->assertDontSee($thirdProduct->name);
+
+    Cart::add([
+        'id' => $thirdProduct->id,
+        'name' => $thirdProduct->name.' (Single Piece)',
+        'price' => 735,
+        'quantity' => 1,
+        'attributes' => [
+            'mrp' => 850,
+            'image' => asset('image/buy.jpg'),
+            'shop_description' => 'Single Piece',
+            'product_id' => $thirdProduct->id,
+            'price_attribute_id' => null,
+            'attribute_name' => null,
+        ],
+    ]);
+
+    $cartIcon
+        ->call('refreshCart')
+        ->assertSee($firstProduct->name)
+        ->assertSee($secondProduct->name)
+        ->assertSee($thirdProduct->name)
         ->assertSee('x 1')
-        ->assertSee('x 2');
+        ->assertDontSee('Your cart is empty.');
 });

@@ -125,6 +125,7 @@ class DetailsComponent extends Component
     {
         $currentCartQty = Cart::getTotalQuantity();
         $this->dispatch('cart-qty-changed-mobile', currentQuantity: $currentCartQty);
+        $this->dispatch('cart-preview-refresh')->to(IconComponent::class);
     }
 
     /**

@@ -22,7 +22,7 @@ class IconComponent extends Component
         $this->refreshCart();
     }
 
-    #[On('cart-qty-changed-mobile')]
+    #[On('cart-preview-refresh')]
     public function refreshCart(): void
     {
         $this->cartCount = Cart::getTotalQuantity();

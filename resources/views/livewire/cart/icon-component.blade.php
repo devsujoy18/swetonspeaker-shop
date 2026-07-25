@@ -8,6 +8,7 @@
     id="cart-button"
     type="button"
     x-on:click="isCartOpen = !isCartOpen"
+    wire:click="refreshCart"
     class="relative hover:text-gray-400"
   >
     <i class="fas fa-cart-plus text-xl"></i>
