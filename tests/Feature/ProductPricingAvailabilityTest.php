@@ -217,3 +217,44 @@ test('cart icon refreshes dropdown contents after cart quantity update event', f
         ->assertSee($product->name)
         ->assertDontSee('Your cart is empty.');
 });
+
+test('cart icon renders multiple cart items with prices and quantities', function (): void {
+    [$firstProduct] = createProductPricingFixture(1070);
+    [$secondProduct] = createProductPricingFixture(1700);
+
+    Cart::add([
+        'id' => $firstProduct->id,
+        'name' => $firstProduct->name.' (Set of 2 Pieces)',
+        'price' => 1070,
+        'quantity' => 1,
+        'attributes' => [
+            'mrp' => 1230,
+            'image' => asset('image/buy.jpg'),
+            'shop_description' => 'Set of 2 Pieces',
+            'product_id' => $firstProduct->id,
+            'price_attribute_id' => null,
+            'attribute_name' => null,
+        ],
+    ]);
+
+    Cart::add([
+        'id' => $secondProduct->id,
+        'name' => $secondProduct->name.' (Set of 2 Pieces)',
+        'price' => 1700,
+        'quantity' => 2,
+        'attributes' => [
+            'mrp' => 1750,
+            'image' => asset('image/buy.jpg'),
+            'shop_description' => 'Set of 2 pieces',
+            'product_id' => $secondProduct->id,
+            'price_attribute_id' => null,
+            'attribute_name' => null,
+        ],
+    ]);
+
+    Livewire::test(IconComponent::class)
+        ->assertSee($firstProduct->name)
+        ->assertSee($secondProduct->name)
+        ->assertSee('x 1')
+        ->assertSee('x 2');
+});
