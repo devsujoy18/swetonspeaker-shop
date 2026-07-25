@@ -6,7 +6,7 @@
   <!-- Cart Button -->
   <button 
     id="cart-button" 
-    wire:click="refreshCart"
+    type="button"
     class="relative hover:text-gray-400"
   >
     <i class="fas fa-cart-plus text-xl"></i>
