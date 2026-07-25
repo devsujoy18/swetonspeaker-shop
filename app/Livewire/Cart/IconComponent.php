@@ -4,6 +4,7 @@ namespace App\Livewire\Cart;
 
 use Darryldecode\Cart\Facades\CartFacade as Cart;
 use Illuminate\Contracts\View\View;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class IconComponent extends Component
@@ -21,6 +22,7 @@ class IconComponent extends Component
         $this->refreshCart();
     }
 
+    #[On('cart-qty-changed-mobile')]
     public function refreshCart(): void
     {
         $this->cartCount = Cart::getTotalQuantity();

@@ -232,21 +232,6 @@
         });
     </script>
     <script>
-        const cartButton = document.getElementById('cart-button');
-        const cartDropdown = document.getElementById('cart-dropdown');
-
-        cartButton.addEventListener('click', () => {
-            cartDropdown.classList.toggle('hidden');
-        });
-
-        // Optional: click outside to close
-        document.addEventListener('click', (event) => {
-            if (!cartButton.contains(event.target) && !cartDropdown.contains(event.target)) {
-              cartDropdown.classList.add('hidden');
-            }
-        });
-    </script>
-    <script>
         document.addEventListener('DOMContentLoaded', function () {
             new Swiper('.swiper', {
               slidesPerView: 1,

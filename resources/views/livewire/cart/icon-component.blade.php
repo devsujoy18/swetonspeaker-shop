@@ -1,11 +1,13 @@
 <div
   class="relative"
-  x-data="{ cartCount: {{ $cartCount }} }"
+  x-data="{ cartCount: {{ $cartCount }}, isCartOpen: false }"
   x-on:cart-qty-changed-mobile.window="cartCount = $event.detail.currentQuantity ?? $event.detail[0]?.currentQuantity ?? cartCount"
+  x-on:click.outside="isCartOpen = false"
 >
   <button
     id="cart-button"
     type="button"
+    x-on:click="isCartOpen = !isCartOpen"
     class="relative hover:text-gray-400"
   >
     <i class="fas fa-cart-plus text-xl"></i>
@@ -20,7 +22,9 @@
 
   <div
     id="cart-dropdown"
-    class="hidden absolute right-0 mt-2 w-80 max-w-[calc(100vw-1rem)] sm:w-96 bg-white border border-gray-200 shadow-lg z-50 overflow-hidden"
+    x-show="isCartOpen"
+    x-cloak
+    class="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1rem)] sm:w-96 bg-white border border-gray-200 shadow-lg z-50 overflow-hidden"
   >
     @if ($cartItems->count() > 0)
       <div class="max-h-[calc(100vh-11rem)] overflow-y-auto divide-y divide-gray-200">

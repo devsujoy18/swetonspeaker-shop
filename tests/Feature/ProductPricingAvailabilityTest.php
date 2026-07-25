@@ -213,7 +213,7 @@ test('cart icon refreshes dropdown contents after cart quantity update event', f
     ]);
 
     $cartIcon
-        ->call('refreshCart')
+        ->dispatch('cart-qty-changed-mobile', currentQuantity: Cart::getTotalQuantity())
         ->assertSee($product->name)
         ->assertDontSee('Your cart is empty.');
 });
