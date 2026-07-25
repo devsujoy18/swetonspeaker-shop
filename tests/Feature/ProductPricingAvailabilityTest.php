@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Cart\IconComponent;
 use App\Livewire\Category\CategoryProductsComponent;
 use App\Livewire\Products\PublicDetailsComponent;
 use App\Models\Category;
@@ -148,4 +149,31 @@ test('category product list add to cart dispatches client side cart count update
         ->assertDispatched('cart-qty-changed-mobile');
 
     expect(Cart::getTotalQuantity())->toBe(1);
+});
+
+test('cart icon refreshes dropdown contents after cart quantity update event', function (): void {
+    [$product] = createProductPricingFixture(995);
+
+    $cartIcon = Livewire::test(IconComponent::class)
+        ->assertSee('Your cart is empty.');
+
+    Cart::add([
+        'id' => $product->id,
+        'name' => $product->name,
+        'price' => 995,
+        'quantity' => 1,
+        'attributes' => [
+            'mrp' => 1095,
+            'image' => asset('image/buy.jpg'),
+            'shop_description' => null,
+            'product_id' => $product->id,
+            'price_attribute_id' => null,
+            'attribute_name' => null,
+        ],
+    ]);
+
+    $cartIcon
+        ->dispatch('cart-qty-changed-mobile', ['currentQuantity' => Cart::getTotalQuantity()])
+        ->assertSee($product->name)
+        ->assertDontSee('Your cart is empty.');
 });
