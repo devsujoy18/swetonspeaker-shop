@@ -228,7 +228,7 @@ class CategoryProductsComponent extends Component
         }
 
         $currentCartQty = Cart::getTotalQuantity();
-        $this->dispatch('cart-qty-changed-mobile', ['currentQuantity' => $currentCartQty]);
+        $this->dispatch('cart-qty-changed-mobile', currentQuantity: $currentCartQty);
     }
 
     // Buy Now
@@ -283,7 +283,7 @@ class CategoryProductsComponent extends Component
         }
 
         $currentCartQty = Cart::getTotalQuantity();
-        $this->dispatch('cart-qty-changed-mobile', ['currentQuantity' => $currentCartQty]);
+        $this->dispatch('cart-qty-changed-mobile', currentQuantity: $currentCartQty);
 
         return redirect()->route('cart')->with('message', $this->alertMessage.'. Please proceed to buy');
     }

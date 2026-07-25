@@ -145,7 +145,7 @@ class PublicDetailsComponent extends Component
         }
 
         // Refresh cart related data
-        $this->dispatch('cart-qty-changed-mobile', ['currentQuantity' => Cart::getTotalQuantity()]);
+        $this->dispatch('cart-qty-changed-mobile', currentQuantity: Cart::getTotalQuantity());
     }
 
     public function render()

@@ -2,6 +2,7 @@
 
 use App\Livewire\Cart\IconComponent;
 use App\Livewire\Category\CategoryProductsComponent;
+use App\Livewire\Category\TypeProductComponent;
 use App\Livewire\Products\PublicDetailsComponent;
 use App\Models\Category;
 use App\Models\Product;
@@ -128,7 +129,10 @@ test('product details still adds a valid priced attribute to cart', function ():
     ])
         ->set('selectedAttributeId', $validAttribute->id)
         ->call('addToCart')
-        ->assertHasNoErrors();
+        ->assertHasNoErrors()
+        ->assertDispatched('cart-qty-changed-mobile', function (string $event, array $params): bool {
+            return $params['currentQuantity'] === 1;
+        });
 
     $cartItem = Cart::getContent()->first();
 
@@ -146,7 +150,43 @@ test('category product list add to cart dispatches client side cart count update
     ])
         ->call('addTocart', $product->id)
         ->assertHasNoErrors()
-        ->assertDispatched('cart-qty-changed-mobile');
+        ->assertDispatched('cart-qty-changed-mobile', function (string $event, array $params): bool {
+            return $params['currentQuantity'] === 1;
+        });
+
+    expect(Cart::getTotalQuantity())->toBe(1);
+});
+
+test('category attribute modal add to cart dispatches the updated cart count', function (): void {
+    [$product, $category] = createProductPricingFixture(0, [1499]);
+    $validAttribute = $product->priceAttributes->first();
+
+    Livewire::test(CategoryProductsComponent::class, [
+        'type' => 'pro-loudspeaker',
+        'categorySlug' => $category->slug,
+    ])
+        ->call('openAttributeModal', $product->id, 'add-to-cart')
+        ->set('selectedAttributeId', $validAttribute->id)
+        ->call('confirmAction')
+        ->assertHasNoErrors()
+        ->assertDispatched('cart-qty-changed-mobile', function (string $event, array $params): bool {
+            return $params['currentQuantity'] === 1;
+        });
+
+    expect(Cart::getTotalQuantity())->toBe(1);
+});
+
+test('type product list add to cart dispatches the updated cart count', function (): void {
+    [$product] = createProductPricingFixture(995);
+
+    Livewire::test(TypeProductComponent::class, [
+        'type' => 'pro-loudspeaker',
+    ])
+        ->call('addTocart', $product->id)
+        ->assertHasNoErrors()
+        ->assertDispatched('cart-qty-changed-mobile', function (string $event, array $params): bool {
+            return $params['currentQuantity'] === 1;
+        });
 
     expect(Cart::getTotalQuantity())->toBe(1);
 });
@@ -173,7 +213,7 @@ test('cart icon refreshes dropdown contents after cart quantity update event', f
     ]);
 
     $cartIcon
-        ->dispatch('cart-qty-changed-mobile', ['currentQuantity' => Cart::getTotalQuantity()])
+        ->call('refreshCart')
         ->assertSee($product->name)
         ->assertDontSee('Your cart is empty.');
 });

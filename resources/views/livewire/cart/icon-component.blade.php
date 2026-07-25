@@ -1,11 +1,12 @@
 <div
   class="relative"
   x-data="{ cartCount: {{ $cartCount }} }"
-  x-on:cart-qty-changed-mobile.window="cartCount = $event.detail[0].currentQuantity"
+  x-on:cart-qty-changed-mobile.window="cartCount = $event.detail.currentQuantity ?? $event.detail[0]?.currentQuantity ?? cartCount"
 >
   <!-- Cart Button -->
   <button 
     id="cart-button" 
+    wire:click="refreshCart"
     class="relative hover:text-gray-400"
   >
     <i class="fas fa-cart-plus text-xl"></i>
