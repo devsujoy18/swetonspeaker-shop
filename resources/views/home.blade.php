@@ -132,6 +132,13 @@
                 <span class="mr-2 mt-0.5"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg></span>
                 All the required informations and specifications are given in the website, no further informations and specification will be shared later on.
             </li>
+            <li class="flex items-start">
+                <span class="mr-2 mt-0.5"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg></span>
+                <p>
+                    We are forced to increase our online prices due to increased cost of Blue Dart courier. We have not
+                    <span class="text-red-600">increased our product prices. But we are despatching through Blue Dart courier because of their dependability.</span>
+                </p>
+            </li>
         </ul>
     </div>
     </div>
