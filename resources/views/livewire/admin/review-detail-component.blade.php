@@ -14,7 +14,7 @@
                     <h3 class="text-lg font-semibold mb-4 border-b pb-2">Product Information</h3>
                     <div class="flex gap-4">
                         @if($review->product->primaryImage)
-                            <img src="{{ env('IMG_HOST').'uploads/'.$review->product->primaryImage->path }}" 
+                            <img src="{{ \App\Support\ImageUrl::upload($review->product->primaryImage->path) }}"
                                  alt="{{ $review->product->name }}"
                                  class="w-24 h-24 object-cover rounded">
                         @else

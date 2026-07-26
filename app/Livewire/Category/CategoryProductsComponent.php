@@ -6,6 +6,7 @@ use App\Livewire\Cart\IconComponent;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\CategoryService;
+use App\Support\ImageUrl;
 use Darryldecode\Cart\Facades\CartFacade as Cart;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -188,12 +189,7 @@ class CategoryProductsComponent extends Component
 
             $priceSelection = $product->resolvePurchasablePrice($priceAttributeId);
 
-            $productimg = $product->primaryImage;
-            if ($productimg) {
-                $productImgpath = env('IMG_HOST').'uploads/'.$productimg->path;
-            } else {
-                $productImgpath = asset('image/buy.jpg');
-            }
+            $productImgpath = ImageUrl::upload($product->primaryImage?->path);
 
             $cartId = $priceAttributeId ? $productId.'-'.$priceAttributeId : $productId;
 
@@ -244,12 +240,7 @@ class CategoryProductsComponent extends Component
 
             $priceSelection = $product->resolvePurchasablePrice($priceAttributeId);
 
-            $productimg = $product->primaryImage;
-            if ($productimg) {
-                $productImgpath = env('IMG_HOST').'uploads/'.$productimg->path;
-            } else {
-                $productImgpath = asset('image/buy.jpg');
-            }
+            $productImgpath = ImageUrl::upload($product->primaryImage?->path);
 
             $cartId = $priceAttributeId ? $productId.'-'.$priceAttributeId : $productId;
 

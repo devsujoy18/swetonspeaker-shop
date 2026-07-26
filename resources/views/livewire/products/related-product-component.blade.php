@@ -45,7 +45,7 @@
                         ]) }}">
                             @php
                                 $productImage = $relatedProduct->productimages->first();
-                                $imageUrl = $productImage ? env('IMG_HOST') . '/uploads/' . $productImage->path : asset('image/buy.jpg');
+                                $imageUrl = \App\Support\ImageUrl::upload($productImage?->path);
                             @endphp
                             <img
                                 src="{{ $imageUrl }}"

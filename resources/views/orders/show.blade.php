@@ -115,8 +115,8 @@
                             <td class="p-3">
                                 <div class="flex gap-3 items-center">
                                     <img src="{{ $image
-                                            ? env('IMG_HOST').'uploads/'.$image->path
-                                            : asset('images/buy.jpg') }}"
+                                            ? \App\Support\ImageUrl::upload($image->path)
+                                            : \App\Support\ImageUrl::placeholder() }}"
                                          class="h-14 w-14 rounded object-cover" height="60px" width="60px">
 
                                     <div>

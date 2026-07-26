@@ -9,9 +9,9 @@
                         <h4 class="text-center text-red-600 uppercase font-semibold px-3">Buy Online</h4>
                         <a href="{{ route('category.products', ['pro-loudspeaker', $category->slug]) }}">
                             @if($category->image)
-                                <img src="{{ env('IMG_HOST') }}/uploads/thumbnails/{{ $category->image }}" class="w-full p-2" />
+                                <img src="{{ \App\Support\ImageUrl::thumbnail($category->image) }}" class="w-full p-2" />
                             @else
-                                <img src="{{ asset('images/buy.jpg') }}" class="w-full p-2" />  
+                                <img src="{{ \App\Support\ImageUrl::placeholder() }}" class="w-full p-2" />
                             @endif
                         </a>
                     </div>
@@ -32,9 +32,9 @@
                         <h4 class="text-center text-red-600 uppercase font-semibold px-3">Buy Online</h4>
                         <a href="{{ route('category.products', ['home-loudspeaker', $category->slug]) }}">
                             @if($category->image)
-                                <img src="{{ env('IMG_HOST') }}/uploads/thumbnails/{{ $category->image }}" class="w-full p-2" />
+                                <img src="{{ \App\Support\ImageUrl::thumbnail($category->image) }}" class="w-full p-2" />
                             @else
-                                <img src="{{ asset('images/buy.jpg') }}" class="w-full p-2" />  
+                                <img src="{{ \App\Support\ImageUrl::placeholder() }}" class="w-full p-2" />
                             @endif
                         </a>
                     </div>

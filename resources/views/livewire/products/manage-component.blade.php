@@ -92,7 +92,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 @if ($product->latest_order1_image)
-                                    <img src="{{ env('IMG_HOST') }}uploads/{{ $product->latest_order1_image->path }}" style="height:120px;width: 120px;">
+                                    <img src="{{ \App\Support\ImageUrl::upload($product->latest_order1_image->path) }}" style="height:120px;width: 120px;">
                                 @else
                                     <span>No primary image</span>
                                 @endif

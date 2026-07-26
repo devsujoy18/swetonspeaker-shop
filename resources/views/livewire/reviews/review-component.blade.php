@@ -27,7 +27,7 @@
                     <div class="mb-8 pb-8 border-b last:border-b-0">
                         <div class="flex gap-4 mb-4">
                             <img
-                                src="{{ $image ? env('IMG_HOST').'uploads/'.$image->path : asset('images/buy.jpg') }}"
+                                src="{{ \App\Support\ImageUrl::upload($image?->path) }}"
                                 class="h-16 w-16 rounded object-cover"
                                 alt="{{ $item->product->name }}"
                             >

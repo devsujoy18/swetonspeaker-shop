@@ -86,7 +86,7 @@ Thank you for choosing us!
     @endphp
 <tr>
 <td>
-    <img src="{{ $image ? env('IMG_HOST').'uploads/'.$image->path : asset('images/buy.jpg') }}" width="80">
+    <img src="{{ \App\Support\ImageUrl::upload($image?->path) }}" width="80">
 </td>
 <td>{{ $item->product->name }}</td>
 <td>

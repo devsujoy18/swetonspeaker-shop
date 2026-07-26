@@ -4,6 +4,7 @@ namespace App\Livewire\Products;
 
 use App\Livewire\Cart\IconComponent;
 use App\Models\Product;
+use App\Support\ImageUrl;
 use Darryldecode\Cart\Facades\CartFacade as Cart;
 use Livewire\Component;
 
@@ -96,9 +97,7 @@ class PublicDetailsComponent extends Component
 
             $priceSelection = $this->product->resolvePurchasablePrice($this->selectedAttributeId ? (int) $this->selectedAttributeId : null);
 
-            // Get the product details and image
-            $productimg = $this->product->primaryImage;
-            $productImgpath = $productimg ? env('IMG_HOST').'/uploads/'.$productimg->path : asset('image/buy.jpg');
+            $productImgpath = ImageUrl::upload($this->product->primaryImage?->path);
 
             $name = $this->product->name;
             $mrp = $priceSelection['mrp'];

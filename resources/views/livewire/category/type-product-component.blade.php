@@ -205,7 +205,7 @@
                                     <img 
                                         x-ref="img"
                                         loading="lazy"
-                                        src="{{ $productimg ? env('IMG_HOST').'uploads/'.$productimg->path : asset('images/buy.jpg') }}"
+                                        src="{{ \App\Support\ImageUrl::upload($productimg?->path) }}"
                                         alt="{{ $product->name }}"
                                         class="w-full h-full object-contain transition-opacity duration-500"
                                         :class="imgLoading ? 'opacity-0' : 'opacity-100'"

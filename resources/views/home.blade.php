@@ -43,7 +43,7 @@
                 
                 <!-- 2. Black Attention Banner -->
                 <!--<div class="bg-black text-white px-4 py-2 text-center rounded-md text-xs text-sm">-->
-                <!--    <a href="{{ env('IMG_HOST') }}attention-manufacturers" class="px-3 py-1 rounded text-center">Attention Manufacturers</a>-->
+                <!--    <a href="{{ \App\Support\ImageUrl::mainSite('attention-manufacturers') }}" class="px-3 py-1 rounded text-center">Attention Manufacturers</a>-->
                 <!--</div>-->
                 <div class="bg-black text-white px-4 py-2 text-center rounded-md text-xs text-sm">
                     <a href="https://www.swetonspeakers.com/attention-manufacturers" class="px-3 py-1 rounded text-center">Attention Manufacturers</a>
@@ -72,7 +72,7 @@
         
         <div class="bg-white flex justify-between items-center hidden md:flex" style="margin-top: 0;">
         <div class="bg-black text-white px-4 py-2 rounded-md font-semibold text-sm">
-            <a href="{{ env('IMG_HOST') }}attention-manufacturers" class="px-3 py-1 rounded text-center">Attention Manufacturers</a>
+            <a href="{{ \App\Support\ImageUrl::mainSite('attention-manufacturers') }}" class="px-3 py-1 rounded text-center">Attention Manufacturers</a>
         </div>
         <div onclick="openCertiModal()" class="bg-red-600 text-white cursor-pointer text-center px-6 py-2 rounded-md text-sm flex-grow mx-4">
             Octune Electronics LLP has received Certificate of Appreciation from The Government of India (Ministry of Finance).

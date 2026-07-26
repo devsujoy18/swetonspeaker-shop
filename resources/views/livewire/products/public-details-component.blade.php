@@ -54,11 +54,9 @@
               <div 
                 x-data="{
                   open: false,
-                  images: [
-                    @foreach($product->productimages as $productimg)
-                        '{{ env('IMG_HOST') }}/uploads/{{ $productimg->path }}',
-                    @endforeach
-                  ],
+                  images: @js($product->productimages->isNotEmpty()
+                    ? $product->productimages->map(fn ($productimg) => \App\Support\ImageUrl::upload($productimg->path))->values()
+                    : collect([\App\Support\ImageUrl::placeholder()])),
                   index: 0,
                   zoomed: false
                 }" 

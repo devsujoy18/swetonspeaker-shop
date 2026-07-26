@@ -52,8 +52,8 @@
                                 <a href="{{ route('product.details', [$type, $categorySlug, $product->slug]) }}"
                                    class="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 transition">
                                     <img src="{{ $product->primaryImage
-                                                  ? env('IMG_HOST').'uploads/'.$product->primaryImage->path
-                                                  : asset('image/buy.jpg') }}"
+                                                  ? \App\Support\ImageUrl::upload($product->primaryImage->path)
+                                                  : \App\Support\ImageUrl::placeholder() }}"
                                          class="w-10 h-10 object-cover rounded"
                                          alt="{{ $product->name }}">
                                     <span class="text-sm">{{ $product->name }}</span>
