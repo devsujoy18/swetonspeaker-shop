@@ -4,7 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'Sweton Speaker') }}</title>
+    <title>{{ $seoMeta['title'] ?? config('app.name', 'Sweton Speaker') }}</title>
+    @if(! empty($seoMeta['description']))
+    <meta name="description" content="{{ $seoMeta['description'] }}">
+    @endif
+    @if(! empty($seoMeta['keywords']))
+    <meta name="keywords" content="{{ $seoMeta['keywords'] }}">
+    @endif
+    <meta name="robots" content="{{ $seoMeta['robots'] ?? 'index, follow' }}">
+    <link rel="canonical" href="{{ $seoMeta['canonical_url'] ?? request()->url() }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,400i,500,500i,700,700i" />
     {{--<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>--}}

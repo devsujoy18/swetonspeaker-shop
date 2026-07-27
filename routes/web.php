@@ -122,6 +122,10 @@ Route::middleware('auth')->group(function () {
             return view('settings.tag_master');
         })->name('admin.tagmaster');
 
+        Route::get('/seo-meta', function () {
+            return view('settings.seo_meta');
+        })->name('admin.seo-meta');
+
         // Review management
         Route::get('/reviews', function () {
             return view('orders.all_reviews');

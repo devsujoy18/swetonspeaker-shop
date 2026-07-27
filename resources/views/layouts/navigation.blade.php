@@ -83,9 +83,24 @@
                             {{ __('Reports') }}
                         </x-nav-link>
                         
-                        <x-nav-link :href="route('admin.settings.edit')" :active="request()->routeIs('admin.settings.edit')">
-                            {{ __('Settings') }}
-                        </x-nav-link>
+                        <x-dropdown align="left" width="48">
+                            <x-slot name="trigger">
+                                <button class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none transition">
+                                    {{ __('Settings') }}
+                                    <svg class="ms-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414L10 13.414 5.293 8.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </x-slot>
+                            <x-slot name="content">
+                                <x-dropdown-link :href="route('admin.settings.edit')" :active="request()->routeIs('admin.settings.edit')">
+                                    {{ __('Settings') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.seo-meta')" :active="request()->routeIs('admin.seo-meta')">
+                                    {{ __('SEO Meta') }}
+                                </x-dropdown-link>
+                            </x-slot>
+                        </x-dropdown>
                         
                         <x-nav-link :href="route('admin.pincodemaster')" :active="request()->routeIs('admin.pincodemaster')">
                             {{ __('Pincodes') }}
@@ -279,8 +294,14 @@
                 {{ __('Create Users') }}
             </x-responsive-nav-link>
             
-            <x-responsive-nav-link :href="route('admin.settings.edit')" :active="request()->routeIs('admin.settings.edit')">
+            <div class="px-4 pt-2">
+                <div class="font-medium text-gray-500">{{ __('Settings') }}</div>
+            </div>
+            <x-responsive-nav-link :href="route('admin.settings.edit')" :active="request()->routeIs('admin.settings.edit')" class="pl-8">
                 {{ __('Settings') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('admin.seo-meta')" :active="request()->routeIs('admin.seo-meta')" class="pl-8">
+                {{ __('SEO Meta') }}
             </x-responsive-nav-link>
             
             <x-responsive-nav-link :href="route('admin.pincodemaster')" :active="request()->routeIs('admin.pincodemaster')">
