@@ -39,7 +39,7 @@
                                             @endif
                                         </div>
                                         <p class="mt-1 text-sm text-gray-600">{{ $notification->message }}</p>
-                                        <p class="mt-1 text-xs text-gray-400">{{ $notification->created_at->diffForHumans() }}</p>
+                                        <p class="mt-1 text-xs text-gray-400">{{ $notification->created_at->format('d F, Y h:i A') }}</p>
                                     </div>
                                     <div class="flex items-center gap-2 ms-4">
                                         @if ($notification->isUnread())
