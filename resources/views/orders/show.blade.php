@@ -69,27 +69,17 @@
             <div class="bg-white p-5 rounded-lg shadow">
                 <h2 class="font-semibold text-lg mb-3">🚚 Shipping Address</h2>
 
-                @if($order->shipping_same_as_billing)
-                    <p class="text-sm text-gray-700 leading-relaxed">
-                        {{ $order->billing_name }}<br>
-                        {{ $order->billing_email }} - {{ $order->billing_phone }}<br>
-                        {{ $order->billing_street }}<br>
-                        {{ $order->billing_locality }}<br>
-                        {{ $order->billing_city }}, {{ $order->billing_state }} - {{ $order->billing_zip }}<br>
-                        @if($order->billing_landmark)
-                            Landmark: {{ $order->billing_landmark }}
-                        @endif
-                    </p>
-                @else
-                    <p class="text-sm text-gray-700 leading-relaxed">
-                        {{ $order->shipping_name }}<br>
-                        {{ $order->shipping_email }} - {{ $order->shipping_phone }}<br>
-                        {{ $order->shipping_street }} <br>
-                        {{ $order->shipping_locality }} <br>
-                        {{ $order->shipping_city }},
-                        {{ $order->shipping_state }} - {{ $order->shipping_zip }}
-                    </p>
-                @endif
+                <p class="text-sm text-gray-700 leading-relaxed">
+                    {{ $order->shipping_name }}<br>
+                    {{ $order->shipping_email }} - {{ $order->shipping_phone }}<br>
+                    {{ $order->shipping_street }} <br>
+                    {{ $order->shipping_locality }} <br>
+                    {{ $order->shipping_city }},
+                    {{ $order->shipping_state }} - {{ $order->shipping_zip }}<br>
+                    @if($order->shipping_landmark)
+                        Landmark: {{ $order->shipping_landmark }}
+                    @endif
+                </p>
             </div>
         </div>
 
